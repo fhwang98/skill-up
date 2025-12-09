@@ -1,7 +1,7 @@
 package com.skillup.backend.global.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skillup.backend.global.common.ApiResponse;
+import com.skillup.backend.global.common.BaseResponse;
 import com.skillup.backend.global.common.ErrorResponse;
 import com.skillup.backend.global.exception.ErrorCode;
 import jakarta.servlet.ServletException;
@@ -25,10 +25,10 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                 .message(code.getMessage())
                 .build();
 
-        ApiResponse<?> apiResponse = ApiResponse.error(error);
+        BaseResponse<?> baseResponse = BaseResponse.error(error);
 
         response.setStatus(code.getStatus().value());
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
+        response.getWriter().write(new ObjectMapper().writeValueAsString(baseResponse));
     }
 }

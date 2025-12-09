@@ -1,6 +1,6 @@
 package com.skillup.backend.global.exception;
 
-import com.skillup.backend.global.common.ApiResponse;
+import com.skillup.backend.global.common.BaseResponse;
 import com.skillup.backend.global.common.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ApiResponse<?>> handleCustomException(CustomException e) {
+    public ResponseEntity<BaseResponse<?>> handleCustomException(CustomException e) {
         ErrorCode code = e.getErrorCode();
 
         log.warn("CustomException: {}", code.getMessage());
@@ -24,12 +24,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<?>> handleValidException(MethodArgumentNotValidException e) {
+    public ResponseEntity<BaseResponse<?>> handleValidException(MethodArgumentNotValidException e) {
         FieldError fieldError = e.getBindingResult().getFieldError();
         String message = (fieldError != null) ? fieldError.getDefaultMessage() : "입력값 검증 실패";
         log.warn("ValidException: {}", message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(
+                .body(BaseResponse.error(
                         ErrorResponse.builder()
                                 .status(HttpStatus.BAD_REQUEST.value())
                                 .code(ErrorCode.VALIDATION_ERROR.name())
@@ -38,9 +38,9 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    private ResponseEntity<ApiResponse<?>> buildErrorResponse(HttpStatus status, String code, String message) {
+    private ResponseEntity<BaseResponse<?>> buildErrorResponse(HttpStatus status, String code, String message) {
         return ResponseEntity.status(status)
-                .body(ApiResponse.error(
+                .body(BaseResponse.error(
                         ErrorResponse.builder()
                                 .status(status.value())
                                 .code(code)
