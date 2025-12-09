@@ -47,6 +47,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll() // H2 콘솔 경로 허용
+                        .requestMatchers("/swagger-ui.html","/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**").permitAll() // swagger 경로 허용
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .anyRequest().authenticated()
                 );

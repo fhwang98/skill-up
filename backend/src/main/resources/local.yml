@@ -23,8 +23,20 @@ spring:
       max-file-size: 10MB
       max-request-size: 40MB
 
-
 logging:
   level:
     org.hibernate.orm.jdbc.bind: trace
     org.hibernate.SQL: debug
+
+springdoc:
+  packages-to-scan: com.skillup.backend
+  default-consumes-media-type: application/json;charset=UTF-8
+  default-produces-media-type: application/json;charset=UTF-8
+  cache:
+    disabled: true
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
