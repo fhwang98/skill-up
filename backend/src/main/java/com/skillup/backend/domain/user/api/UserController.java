@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -28,6 +29,33 @@ public class UserController {
 
     private final UserService userService;
 
+    // 이메일 중복체크 api
+    @Operation(summary = "이메일 중복 체크", description = "회원가입 시 이메일 중복 여부를 확인합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "확인 성공", content = @Content(schema = @Schema(implementation = BaseResponse.class))),
+            @ApiResponse(responseCode = "400", description = "입력값 유효성 검증 실패", content = @Content(schema = @Schema(implementation = BaseResponse.class))),
+    })
+    @PostMapping(value = "/exist-email")
+    public ResponseEntity<BaseResponse<Map<String, Boolean>>> existEmail(@Validated(UserRequestDTO.existEmailGroup.class) @RequestBody UserRequestDTO dto) {
+        log.info("이메일 중복검사 요청 POST /users/exist-email: {}", dto.getEmail());
+        Boolean exists = userService.existsByEmail(dto);
+        Map<String, Boolean> responseBody = Collections.singletonMap("exists", exists);
+        return ResponseEntity.ok(BaseResponse.success(responseBody));
+    }
+    // 닉네임 중복체크 api
+    @Operation(summary = "닉네임 중복 체크", description = "회원가입 시 닉네임 중복 여부를 확인합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "확인 성공", content = @Content(schema = @Schema(implementation = BaseResponse.class))),
+            @ApiResponse(responseCode = "400", description = "입력값 유효성 검증 실패", content = @Content(schema = @Schema(implementation = BaseResponse.class))),
+    })
+    @PostMapping(value = "/exist-nickname")
+    public ResponseEntity<BaseResponse<Map<String, Boolean>>> existNickname(@Validated(UserRequestDTO.existNicknameGroup.class) @RequestBody UserRequestDTO dto) {
+        log.info("닉네임 중복검사 요청 POST /users/exist-nickname: {}", dto.getNickname());
+        Boolean exists = userService.existsByNickname(dto);
+        Map<String, Boolean> responseBody = Collections.singletonMap("exists", exists);
+        return ResponseEntity.ok(BaseResponse.success(responseBody));
+    }
+
     // 자체 회원가입 api
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "자체 회원가입", description = "회원가입 api")
@@ -36,12 +64,12 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패", content = @Content(schema = @Schema(implementation = BaseResponse.class))),
             @ApiResponse(responseCode = "409", description = "이메일 중복", content = @Content(schema = @Schema(implementation = BaseResponse.class)))
     })
-    public ResponseEntity<BaseResponse<Map<String, Long>>> createUser(@Validated @RequestBody UserRequestDTO dto) {
+    public ResponseEntity<BaseResponse<Map<String, Long>>> createUser(@Validated(UserRequestDTO.createGroup.class) @RequestBody UserRequestDTO dto) {
 
         log.info("회원가입 api 요청 POST /users");
         Long id = userService.createUser(dto);
         Map<String, Long> responseBody = Collections.singletonMap("userId", id);
-        return ResponseEntity.status(201).body(BaseResponse.success(responseBody));
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponse.success(responseBody));
 
     }
 

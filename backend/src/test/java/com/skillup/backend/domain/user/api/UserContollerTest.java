@@ -15,7 +15,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
@@ -77,4 +79,69 @@ class UserControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }
+
+    @Test
+    @DisplayName("이메일 중복 검사 성공 - 200")
+    void existEmail_ReturnsTrue_WhenEmailExists() throws Exception {
+        // given
+        UserRequestDTO dto = new UserRequestDTO("dup@test.com", "password", "닉네임");
+        given(userService.existsByEmail(any(UserRequestDTO.class)))
+                .willReturn(true);
+
+        // when & then
+        mockMvc.perform(post("/users/exist-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.exists").value(true))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("이메일 중복 검사 이메일 미입력 시 Validation 실패 - 400")
+    void existEmail_ReturnsBadRequest_WhenEmailIsBlank() throws Exception {
+        // given
+        UserRequestDTO dto = new UserRequestDTO("", "password", "홍길동");
+
+        // when & then
+        mockMvc.perform(post("/users/exist-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("닉네임 중복 검사 성공 - 200")
+    void existNickname_ReturnsTrue_WhenNicknameExists() throws Exception {
+        // given
+        UserRequestDTO dto = new UserRequestDTO("test@test.com", "password", "dupNickname");
+        given(userService.existsByNickname(any(UserRequestDTO.class)))
+                .willReturn(true);
+
+        // when & then
+        mockMvc.perform(post("/users/exist-nickname")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.exists").value(true))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("닉네임 중복 검사 닉네임 미입력 시 Validation 실패 - 400")
+    void existNickname_ReturnsBadRequest_WhenNicknameIsBlank() throws Exception {
+        // given
+        UserRequestDTO dto = new UserRequestDTO("test@test.com", "password", "");
+
+        // when & then
+        mockMvc.perform(post("/users/exist-nickname")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andDo(print());
+    }
+
 }
