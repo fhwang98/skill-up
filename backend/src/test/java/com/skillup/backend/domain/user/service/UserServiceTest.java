@@ -74,4 +74,31 @@ class UserServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.DUPLICATE_NICKNAME);
     }
+
+    @Test
+    @DisplayName("이메일 중복 검사 - 중복됨")
+    void existEmail_ReturnsTrue_WhenEmailExists() {
+        // given
+        UserRequestDTO dto1 = new UserRequestDTO("dup@test.com", "pass", "홍길동");
+        UserRequestDTO dto2 = new UserRequestDTO("dup@test.com", "pass", "둘리");
+        userService.createUser(dto1);
+        // when
+        boolean exists = userService.existsByEmail(dto2);
+        // then
+        assertThat(exists).isTrue();
+    }
+
+    @Test
+    @DisplayName("닉네임 중복 검사 - 중복됨")
+    void existNickname_ReturnsTrue_WhenNicknameExists() {
+        // given
+        UserRequestDTO dto1 = new UserRequestDTO("dup@test.com", "pass", "닉네임");
+        UserRequestDTO dto2 = new UserRequestDTO("dup2@test.com", "pass", "닉네임");
+        userService.createUser(dto1);
+        // when
+        boolean exists = userService.existsByNickname(dto2);
+        // then
+        assertThat(exists).isTrue();
+    }
+
 }

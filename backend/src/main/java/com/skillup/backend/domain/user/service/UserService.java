@@ -48,4 +48,19 @@ public class UserService {
 
     }
 
+    // 회원가입 이메일 중복 검사
+    @Transactional(readOnly = true)
+    public Boolean existsByEmail(UserRequestDTO dto) {
+        log.info("이메일 중복 검사 요청: {}", dto.getEmail());
+        return userRepository.existsByEmail(dto.getEmail());
+    }
+
+    // 회원가입 닉네임 중복 검사
+    @Transactional(readOnly = true)
+    public Boolean existsByNickname(UserRequestDTO dto) {
+        log.info("닉네임 중복 검사 요청: {}", dto.getNickname());
+        return userRepository.existsByNickname(dto.getNickname());
+    }
+
+
 }
