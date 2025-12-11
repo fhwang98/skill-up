@@ -70,7 +70,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll() // H2 콘솔 경로 허용
                         .requestMatchers("/swagger-ui.html","/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**").permitAll() // swagger 경로 허용
-                        .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users", "/users/exist-email", "users/exist-nickname").permitAll()
                         .anyRequest().authenticated()
                 );
         // 예외 처리
