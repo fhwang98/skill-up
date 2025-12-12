@@ -40,4 +40,10 @@ public class UserEntity extends BaseEntity {
 
     @Builder.Default
     private boolean deleted = false;
+
+    public void updateSocialUser(String email, String nickname, String providerId) {
+        this.email = email;
+        this.nickname = nickname;
+        this.providerId = providerId;
+    }
 }
