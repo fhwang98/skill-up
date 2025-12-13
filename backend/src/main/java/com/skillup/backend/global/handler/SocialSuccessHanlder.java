@@ -3,7 +3,6 @@ package com.skillup.backend.global.handler;
 import com.skillup.backend.domain.auth.service.RefreshTokenService;
 import com.skillup.backend.domain.auth.service.SocialTokenService;
 import com.skillup.backend.global.util.JWTUtil;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,7 +28,7 @@ public class SocialSuccessHanlder implements AuthenticationSuccessHandler {
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
 
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         String username =  authentication.getName();

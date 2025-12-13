@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillup.backend.domain.auth.service.RefreshTokenService;
 import com.skillup.backend.global.common.BaseResponse;
 import com.skillup.backend.global.util.JWTUtil;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +24,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
 
         // username, role
         String username =  authentication.getName();

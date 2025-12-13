@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collections;
 import java.util.Map;
 
 @Tag(name = "AUTH API", description = "사용자 인증 관련 api")
