@@ -53,7 +53,7 @@ class RefreshTokenServiceTest {
     @DisplayName("removeRefresh - RefreshToken 삭제")
     void removeRefresh_success() {
         // when
-        refreshTokenService.removeRefresh(email, refreshToken);
+        refreshTokenService.removeRefresh(email);
 
         // then
         verify(refreshTokenRepository).deleteById(email);

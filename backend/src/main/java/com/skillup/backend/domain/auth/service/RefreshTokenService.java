@@ -29,7 +29,7 @@ public class RefreshTokenService {
     }
 
     // JWT Refresh 토큰 삭제 메소드
-    public void removeRefresh(String email, String refreshToken) {
+    public void removeRefresh(String email) {
 
         refreshTokenRepository.deleteById(email);
         log.info("[Redis] RefreshToken 삭제 완료 (email={})", email);
