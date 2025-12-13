@@ -1,0 +1,141 @@
+import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import kakaoLoginUrl from "@/assets/images/kakao_login_medium_narrow.png";
+import naverLoginUrl from "@/assets/images/NAVER_login_Light_KR_green_narrow_H56.png";
+
+// .env로 부터 백엔드 URL 받아오기
+const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
+
+const LoginPage = () => {
+	// 자체 로그인시 username/password 변수
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+	const [error, setError] = useState("");
+
+	const navigate = useNavigate();
+
+	// 자체 로그인 이벤트
+	const handleLogin = async (e) => {
+		e.preventDefault();
+		setError("");
+
+		if (email === "" || password === "") {
+			setError("이메일과 비밀번호를 입력하세요.");
+			return;
+		}
+
+		// API 요청
+		try {
+			const res = await fetch(`${BACKEND_API_BASE_URL}/auth/login`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				credentials: "include",
+				body: JSON.stringify({ email, password }),
+			});
+
+			if (!res.ok) throw new Error("로그인 실패");
+
+			const response = await res.json();
+			const data = response.data;
+
+			localStorage.setItem("accessToken", data.accessToken);
+
+			navigate("/");
+		} catch (err) {
+			setError("이메일 또는 비밀번호가 틀렸습니다.", err);
+		}
+	};
+
+	// 소셜 로그인 이벤트
+	const handleSocialLogin = async (provider) => {
+		window.location.href = `${BACKEND_API_BASE_URL}/oauth2/authorization/${provider}`;
+	};
+
+	return (
+		<div className="flex justify-center items-center min-h-screen bg-gray-100">
+			<Card className="w-[380px]">
+				<CardHeader className="text-center">
+					<CardTitle className="text-2xl">로그인</CardTitle>
+					<CardDescription>계속하려면 로그인하세요.</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<form onSubmit={handleLogin}>
+						<div className="grid w-full items-center gap-4">
+							<div className="flex flex-col space-y-1.5">
+								<Label htmlFor="email">이메일</Label>
+								<Input
+									id="email"
+									type="text"
+									placeholder="이메일"
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									required
+								/>
+							</div>
+							<div className="flex flex-col space-y-1.5">
+								<Label htmlFor="password">비밀번호</Label>
+								<Input
+									id="password"
+									type="password"
+									placeholder="비밀번호"
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+									required
+								/>
+							</div>
+							{error && <p className="text-sm text-red-500">{error}</p>}
+							<Button type="submit" className="w-full cursor-pointer">
+								로그인
+							</Button>
+							<Button
+								variant="outline"
+								className="text-sm w-full cursor-pointer"
+								onClick={() => navigate("/join")}
+							>
+								회원가입
+							</Button>
+						</div>
+					</form>
+				</CardContent>
+				<CardFooter className="flex flex-col space-y-4">
+					<div className="relative w-full">
+						<div className="absolute inset-0 flex items-center">
+							<span className="w-full border-t" />
+						</div>
+						<div className="relative flex justify-center text-xs uppercase">
+							<span className="bg-background px-2 text-muted-foreground">
+								Or continue with
+							</span>
+						</div>
+					</div>
+					<div className="grid grid-cols-2 gap-4 w-full">
+						<img
+							src={kakaoLoginUrl}
+							alt="KAKAO 로그인 버튼"
+							onClick={() => handleSocialLogin("kakao")}
+							className="cursor-pointer"
+						/>
+						<img
+							src={naverLoginUrl}
+							alt="NAVER 로그인 버튼"
+							onClick={() => handleSocialLogin("naver")}
+							className="cursor-pointer"
+						/>
+					</div>
+				</CardFooter>
+			</Card>
+		</div>
+	);
+};
+export default LoginPage;
