@@ -1,5 +1,3 @@
-import fetchWithAccess from "@/utils/fetchUtil";
-
 const BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
 
 export const login = (email, password) =>
@@ -11,6 +9,10 @@ export const login = (email, password) =>
 	});
 
 export const logout = () =>
-	fetchWithAccess(`${BASE_URL}/auth/logout`, {
+	fetch(`${BASE_URL}/auth/logout`, {
 		method: "POST",
+		credentials: "include",
+		headers: {
+			Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+		},
 	});
