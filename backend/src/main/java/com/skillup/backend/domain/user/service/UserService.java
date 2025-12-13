@@ -1,6 +1,7 @@
 package com.skillup.backend.domain.user.service;
 
 import com.skillup.backend.domain.user.dto.UserRequestDTO;
+import com.skillup.backend.domain.user.dto.UserResponseDTO;
 import com.skillup.backend.domain.user.entity.SocialProviderType;
 import com.skillup.backend.domain.user.entity.UserEntity;
 import com.skillup.backend.domain.user.entity.UserRoleType;
@@ -62,5 +63,21 @@ public class UserService {
         return userRepository.existsByNickname(dto.getNickname());
     }
 
+    // 회원 정보 조회
+    public UserResponseDTO getByEmail(String email) {
+        log.info("회원 정보 조회 email: {}", email);
+        UserEntity user = userRepository.findByEmailAndDeleted(email, false)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 사용자: {}", email);
+                    return new CustomException(ErrorCode.USER_NOT_FOUND);
+                });
+        return UserResponseDTO
+                .builder()
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
+    }
 
 }

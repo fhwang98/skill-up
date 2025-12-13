@@ -1,6 +1,7 @@
 package com.skillup.backend.domain.user.api;
 
 import com.skillup.backend.domain.user.dto.UserRequestDTO;
+import com.skillup.backend.domain.user.dto.UserResponseDTO;
 import com.skillup.backend.domain.user.service.UserService;
 import com.skillup.backend.global.common.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -71,6 +73,14 @@ public class UserController {
         Map<String, Long> responseBody = Collections.singletonMap("userId", id);
         return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponse.success(responseBody));
 
+    }
+
+
+    @GetMapping(value = "/me")
+    @Operation(summary = "유저 정보 확인", description = "로그인한 유저의 이메일과 닉네임을 확인합니다.")
+    public ResponseEntity<BaseResponse<UserResponseDTO>> getUser(Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(BaseResponse.success(userService.getByEmail(email)));
     }
 
 }
