@@ -11,9 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-// .env로 부터 백엔드 URL 받아오기
-const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
+import { checkEmailExists, checkNicknameExists, join } from "@/api/user";
 
 function JoinPage() {
 	const navigate = useNavigate();
@@ -41,11 +39,7 @@ function JoinPage() {
 			}
 
 			try {
-				const res = await fetch(`${BACKEND_API_BASE_URL}/users/exist-email`, {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ email }),
-				});
+				const res = await checkEmailExists(email);
 
 				const response = await res.json();
 				const exists = response.data.exists;
@@ -69,11 +63,7 @@ function JoinPage() {
 			}
 
 			try {
-				const res = await fetch(`${BACKEND_API_BASE_URL}/users/exist-nickname`, {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ nickname }),
-				});
+				const res = await checkNicknameExists(nickname);
 
 				const response = await res.json();
 				const exists = response.data.exists;
@@ -98,11 +88,7 @@ function JoinPage() {
 		}
 
 		try {
-			const res = await fetch(`${BACKEND_API_BASE_URL}/users`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ email, password, nickname }),
-			});
+			const res = await join({ email, password, nickname });
 
 			if (!res.ok) throw new Error("회원가입 실패");
 			alert("회원가입이 완료되었습니다.");
