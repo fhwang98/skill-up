@@ -1,28 +1,22 @@
 import { logout } from "@/api/auth";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const Header = () => {
-	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const navigate = useNavigate();
 	const location = useLocation();
 
-	useEffect(() => {
-		setIsLoggedIn(!!localStorage.getItem("accessToken"));
-	}, []);
+	const isLoggedIn = !!localStorage.getItem("accessToken");
+	const isLoginPage = location.pathname === "/login";
 
 	const handleLogout = async () => {
 		try {
 			await logout();
 		} finally {
 			localStorage.removeItem("accessToken");
-			setIsLoggedIn(false);
 			navigate("/login");
 		}
 	};
-
-	const isLoginPage = location.pathname === "/login";
 
 	return (
 		<header>
