@@ -1,11 +1,14 @@
 package com.skillup.backend.global.config;
 
-import com.skillup.backend.global.handler.CustomAccessDeniedHandler;
-import com.skillup.backend.global.handler.CustomAuthenticationEntryPoint;
+import com.skillup.backend.global.filter.*;
+import com.skillup.backend.global.handler.*;
+import com.skillup.backend.global.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -14,6 +17,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,12 +32,22 @@ public class SecurityConfig {
 
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final JWTUtil jwtUtil;
+    private final LoginSuccessHandler loginSuccessHandler;
+    private final SocialSuccessHanlder socialSuccessHanlder;
+    private final AuthenticationConfiguration authenticationConfiguration;
+    private final CustomAuthenticationFailureHandler authenticationFailureHandler;
 
 
     // 비밀번호 단방향(BCrypt) 암호화용 Bean
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+    // 커스텀 로그인 필터를 위한 AuthenticationManager Bean 수동 등록
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
     }
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -65,12 +80,23 @@ public class SecurityConfig {
         // 기본 Basic 인증 필터 disable
         http
                 .httpBasic(AbstractHttpConfigurer::disable);
+        // 커스텀 필터 추가
+        http
+                .addFilterBefore(new JWTFilter(jwtUtil), LogoutFilter.class);
+        http
+                .addFilterBefore(new LoginFilter(authenticationManager(authenticationConfiguration), loginSuccessHandler), UsernamePasswordAuthenticationFilter.class);
+        // OAuth2 인증용
+        http
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(socialSuccessHanlder)
+                        .failureHandler(authenticationFailureHandler));
         // 인가
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll() // H2 콘솔 경로 허용
                         .requestMatchers("/swagger-ui.html","/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**").permitAll() // swagger 경로 허용
-                        .requestMatchers(HttpMethod.POST, "/users", "/users/exist-email", "users/exist-nickname").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users", "/users/exist-email", "/users/exist-nickname").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .anyRequest().authenticated()
                 );
         // 예외 처리
@@ -85,7 +111,6 @@ public class SecurityConfig {
         http
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
         //h2 설정
         http
                 .headers(headers -> headers
