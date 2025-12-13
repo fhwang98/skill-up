@@ -100,8 +100,8 @@ function JoinPage() {
 
 	// 페이지
 	return (
-		<div className="flex items-center justify-center min-h-screen bg-gray-50">
-			<Card className="w-full max-w-md">
+		<div className="flex items-center justify-center min-h-screen bg-gray-100">
+			<Card className="w-full max-w-sm min-w-sm m-6">
 				<CardHeader>
 					<CardTitle className="text-2xl">회원 가입</CardTitle>
 					<CardDescription>필수 정보를 입력하여 계정을 생성하세요.</CardDescription>
@@ -157,7 +157,7 @@ function JoinPage() {
 					<CardFooter>
 						<Button
 							type="submit"
-							className="w-full mt-4"
+							className="w-full mt-6 cursor-pointer"
 							disabled={
 								isEmailValid !== true || isNicknameValid !== true || password.length < 8
 							}

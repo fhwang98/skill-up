@@ -60,10 +60,9 @@ const LoginPage = () => {
 
 	return (
 		<div className="flex justify-center items-center min-h-screen bg-gray-100">
-			<Card className="w-[380px]">
+			<Card className="w-full max-w-sm min-w-sm m-6">
 				<CardHeader className="text-center">
 					<CardTitle className="text-2xl">로그인</CardTitle>
-					<CardDescription>계속하려면 로그인하세요.</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={handleLogin}>
