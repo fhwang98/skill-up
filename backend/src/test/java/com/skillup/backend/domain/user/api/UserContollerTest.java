@@ -2,6 +2,7 @@ package com.skillup.backend.domain.user.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillup.backend.domain.user.dto.UserRequestDTO;
+import com.skillup.backend.domain.user.dto.UserResponseDTO;
 import com.skillup.backend.domain.user.service.UserService;
 import com.skillup.backend.global.exception.CustomException;
 import com.skillup.backend.global.exception.ErrorCode;
@@ -12,10 +13,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDateTime;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -143,5 +149,40 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andDo(print());
     }
+
+    @Test
+    @DisplayName("내 정보 조회 성공 - 로그인 사용자")
+    void getUserMe_success() throws Exception {
+
+        // given
+        LocalDateTime now = LocalDateTime.now();
+        UserResponseDTO response =
+                UserResponseDTO.builder()
+                        .email("me@test.com")
+                        .nickname("내닉네임")
+                        .createdAt(now.minusDays(1))
+                        .updatedAt(now)
+                        .build();
+
+        Mockito.when(userService.getByEmail("me@test.com"))
+                .thenReturn(response);
+
+        // Authentication mock
+        Authentication authentication = Mockito.mock(Authentication.class);
+        Mockito.when(authentication.getName()).thenReturn("me@test.com");
+
+        // when & then
+        mockMvc.perform(
+                        get("/users/me")
+                                .principal(authentication)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.email").value("me@test.com"))
+                .andExpect(jsonPath("$.data.nickname").value("내닉네임"))
+                .andExpect(jsonPath("$.data.createdAt").value(now.minusDays(1).toString()))
+                .andExpect(jsonPath("$.data.updatedAt").value(now.toString()));
+    }
+
 
 }

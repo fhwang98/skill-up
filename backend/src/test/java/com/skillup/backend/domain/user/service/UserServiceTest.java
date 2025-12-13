@@ -1,6 +1,7 @@
 package com.skillup.backend.domain.user.service;
 
 import com.skillup.backend.domain.user.dto.UserRequestDTO;
+import com.skillup.backend.domain.user.dto.UserResponseDTO;
 import com.skillup.backend.domain.user.entity.UserEntity;
 import com.skillup.backend.domain.user.repository.UserRepository;
 import com.skillup.backend.global.exception.CustomException;
@@ -99,6 +100,35 @@ class UserServiceTest {
         boolean exists = userService.existsByNickname(dto2);
         // then
         assertThat(exists).isTrue();
+    }
+
+    @Test
+    @DisplayName("회원 정보 조회 성공")
+    void getUser_success() {
+        // given
+        UserRequestDTO dto =
+                new UserRequestDTO("me@test.com", "password", "조회유저");
+
+        userService.createUser(dto);
+
+        // when
+        UserResponseDTO response = userService.getByEmail("me@test.com");
+
+        // then
+        assertThat(response.getEmail()).isEqualTo("me@test.com");
+        assertThat(response.getNickname()).isEqualTo("조회유저");
+        assertThat(response.getCreatedAt()).isNotNull();
+        assertThat(response.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("회원 정보 조회 실패 - 존재하지 않는 사용자")
+    void getUser_userNotFound_fail() {
+        // when & then
+        assertThatThrownBy(() -> userService.getByEmail("no@test.com"))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
     }
 
 }
