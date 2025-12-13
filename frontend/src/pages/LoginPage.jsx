@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import kakaoLoginUrl from "@/assets/images/kakao_login_medium_narrow.png";
 import naverLoginUrl from "@/assets/images/NAVER_login_Light_KR_green_narrow_H56.png";
+import { login } from "@/api/auth";
 
 // .env로 부터 백엔드 URL 받아오기
 const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
@@ -37,12 +38,7 @@ const LoginPage = () => {
 
 		// API 요청
 		try {
-			const res = await fetch(`${BACKEND_API_BASE_URL}/auth/login`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				credentials: "include",
-				body: JSON.stringify({ email, password }),
-			});
+			const res = await login(email, password);
 
 			if (!res.ok) throw new Error("로그인 실패");
 
