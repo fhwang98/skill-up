@@ -37,6 +37,8 @@ public class SecurityConfig {
     private final SocialSuccessHanlder socialSuccessHanlder;
     private final AuthenticationConfiguration authenticationConfiguration;
     private final CustomAuthenticationFailureHandler authenticationFailureHandler;
+    private final CustomLogoutHandler customLogoutHandler;
+    private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
 
     // 비밀번호 단방향(BCrypt) 암호화용 Bean
@@ -90,6 +92,13 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(socialSuccessHanlder)
                         .failureHandler(authenticationFailureHandler));
+        // 로그아웃
+        http
+                .logout(logout -> logout
+                        .logoutUrl("/auth/logout")
+                        .addLogoutHandler(customLogoutHandler)
+                        .logoutSuccessHandler(customLogoutSuccessHandler)
+                );
         // 인가
         http
                 .authorizeHttpRequests(auth -> auth
