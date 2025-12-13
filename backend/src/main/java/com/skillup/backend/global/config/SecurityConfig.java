@@ -105,7 +105,9 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll() // H2 콘솔 경로 허용
                         .requestMatchers("/swagger-ui.html","/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**").permitAll() // swagger 경로 허용
                         .requestMatchers(HttpMethod.POST, "/users", "/users/exist-email", "/users/exist-nickname").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/logout").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
                         .anyRequest().authenticated()
                 );
         // 예외 처리
