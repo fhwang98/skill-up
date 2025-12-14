@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
-	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
@@ -39,10 +38,7 @@ function JoinPage() {
 			}
 
 			try {
-				const res = await checkEmailExists(email);
-
-				const response = await res.json();
-				const exists = response.data.exists;
+				const { exists } = await checkEmailExists(email);
 				setIsEmailValid(!exists);
 			} catch {
 				setIsEmailValid(null);
@@ -63,10 +59,7 @@ function JoinPage() {
 			}
 
 			try {
-				const res = await checkNicknameExists(nickname);
-
-				const response = await res.json();
-				const exists = response.data.exists;
+				const { exists } = await checkNicknameExists(nickname);
 				setIsNicknameValid(!exists);
 			} catch {
 				setIsNicknameValid(null);
@@ -88,9 +81,7 @@ function JoinPage() {
 		}
 
 		try {
-			const res = await join({ email, password, nickname });
-
-			if (!res.ok) throw new Error("회원가입 실패");
+			await join({ email, password, nickname });
 			alert("회원가입이 완료되었습니다.");
 			navigate("/login");
 		} catch {

@@ -1,22 +1,56 @@
+import fetchWithAccess from "@/utils/fetchUtil";
+
 const BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
 
-export const checkEmailExists = (email) =>
-	fetch(`${BASE_URL}/users/exist-email`, {
+// 이메일 중복 검사
+export const checkEmailExists = async (email) => {
+	const res = await fetch(`${BASE_URL}/users/exist-email`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ email }),
 	});
+	if (!res.ok) {
+		throw new Error("이메일 중복 검사 실패");
+	}
+	const { data } = await res.json();
+	return data;
+};
 
-export const checkNicknameExists = (nickname) =>
-	fetch(`${BASE_URL}/users/exist-nickname`, {
+// 닉네임 중복 검사
+export const checkNicknameExists = async (nickname) => {
+	const res = await fetch(`${BASE_URL}/users/exist-nickname`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ nickname }),
 	});
+	if (!res.ok) {
+		throw new Error("닉네임 중복 검사 실패");
+	}
+	const { data } = await res.json();
+	return data;
+};
 
-export const join = ({ email, password, nickname }) =>
-	fetch(`${BASE_URL}/users`, {
+// 회원가입
+export const join = async ({ email, password, nickname }) => {
+	const res = await fetch(`${BASE_URL}/users`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ email, password, nickname }),
 	});
+
+	if (!res.ok) {
+		throw new Error("회원가입 실패");
+	}
+
+	const { data } = await res.json();
+	return data;
+};
+
+export const getUser = async () => {
+	const res = await fetchWithAccess(`${BASE_URL}/users/me`, {
+		method: "GET",
+		headers: { "Content-Type": "application/json" },
+	});
+	const { data } = await res.json();
+	return data;
+};

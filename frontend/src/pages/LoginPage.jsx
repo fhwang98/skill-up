@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
-	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
@@ -38,14 +37,9 @@ const LoginPage = () => {
 
 		// API 요청
 		try {
-			const res = await login(email, password);
+			const { accessToken } = await login(email, password);
 
-			if (!res.ok) throw new Error("로그인 실패");
-
-			const response = await res.json();
-			const data = response.data;
-
-			localStorage.setItem("accessToken", data.accessToken);
+			localStorage.setItem("accessToken", accessToken);
 
 			navigate("/");
 		} catch (err) {
