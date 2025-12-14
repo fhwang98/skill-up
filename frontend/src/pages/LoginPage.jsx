@@ -35,15 +35,19 @@ const LoginPage = () => {
 			return;
 		}
 
-		// API 요청
 		try {
-			const { accessToken } = await login(email, password);
+			const response = await login(email, password);
 
+			if (!response.success) {
+				setError(response.error.message);
+				return;
+			}
+
+			const { accessToken } = response.data;
 			localStorage.setItem("accessToken", accessToken);
-
 			navigate("/");
-		} catch (err) {
-			setError("이메일 또는 비밀번호가 틀렸습니다.", err);
+		} catch {
+			setError("서버와 통신할 수 없습니다.");
 		}
 	};
 

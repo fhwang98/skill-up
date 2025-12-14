@@ -8,12 +8,11 @@ export const login = async (email, password) => {
 		body: JSON.stringify({ email, password }),
 	});
 
-	if (!res.ok) {
-		throw new Error("로그인 실패");
+	if (!res) {
+		throw new Error("서버와 통신할 수 없습니다.");
 	}
 
-	const { data } = await res.json();
-	return data;
+	return await res.json();
 };
 export const logout = () =>
 	fetch(`${BASE_URL}/auth/logout`, {

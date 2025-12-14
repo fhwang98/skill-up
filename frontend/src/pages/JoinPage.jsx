@@ -38,7 +38,14 @@ function JoinPage() {
 			}
 
 			try {
-				const { exists } = await checkEmailExists(email);
+				const response = await checkEmailExists(email);
+
+				if (!response.success) {
+					setIsEmailValid(null);
+					return;
+				}
+
+				const { exists } = response.data;
 				setIsEmailValid(!exists);
 			} catch {
 				setIsEmailValid(null);
@@ -51,7 +58,6 @@ function JoinPage() {
 
 	// nickname 입력창 변경 이벤트
 	useEffect(() => {
-		// nickname 중복 확인
 		const checkNickname = async () => {
 			if (nickname.length < 2 || nickname.length > 10) {
 				setIsNicknameValid(null);
@@ -59,7 +65,14 @@ function JoinPage() {
 			}
 
 			try {
-				const { exists } = await checkNicknameExists(nickname);
+				const response = await checkNicknameExists(nickname);
+
+				if (!response.success) {
+					setIsNicknameValid(null);
+					return;
+				}
+
+				const { exists } = response.data;
 				setIsNicknameValid(!exists);
 			} catch {
 				setIsNicknameValid(null);
@@ -81,11 +94,17 @@ function JoinPage() {
 		}
 
 		try {
-			await join({ email, password, nickname });
+			const response = await join({ email, password, nickname });
+
+			if (!response.success) {
+				setError(response.error.message);
+				return;
+			}
+
 			alert("회원가입이 완료되었습니다.");
 			navigate("/login");
 		} catch {
-			setError("회원가입 중 오류가 발생했습니다.");
+			setError("서버와 통신 중 오류가 발생했습니다.");
 		}
 	};
 
