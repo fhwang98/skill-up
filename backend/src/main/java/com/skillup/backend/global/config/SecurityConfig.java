@@ -108,7 +108,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/logout").authenticated()
                         .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/users/me").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/users/me", "/users/me/password").authenticated()
                         .anyRequest().authenticated()
                 );
         // 예외 처리

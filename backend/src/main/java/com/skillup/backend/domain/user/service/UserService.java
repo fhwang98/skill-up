@@ -105,6 +105,33 @@ public class UserService {
         return entity.getId();
     }
 
+    //  비밀번호 변경 요청
+    @Transactional
+    public Long updateUserPassword(String email, UserRequestDTO dto) {
+        log.info("비밀번호 변경 요청 email: {}", email);
+        UserEntity entity = userRepository.findByEmailAndDeleted(email, false)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 사용자: {}", email);
+                    return new CustomException(ErrorCode.USER_NOT_FOUND);
+                });
+        // 자체 회원만 변경 가능
+        if(!entity.getProvider().equals(SocialProviderType.LOCAL)) {
+            log.warn("소셜 회원 정보 수정 불가");
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+        // 현재 비밀번호가 일치하지 않음
+        if (!passwordEncoder.matches(dto.getPassword(), entity.getPassword())) {
+            log.warn("비밀번호 일치하지 않음");
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+        // 현재 비밀번호와 새로운 비밀번호가 일치함
+        if (dto.getPassword().equals(dto.getNewPassword())) {
+            log.warn("기존 비밀번호와 새로운 비밀번호 일치");
+            throw new CustomException(ErrorCode.SAME_AS_OLD_PASSWORD);
+        }
 
+        entity.updatePassword(passwordEncoder.encode(dto.getNewPassword()));
 
+        return entity.getId();
+    }
 }
