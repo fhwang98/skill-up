@@ -83,4 +83,14 @@ public class UserController {
         return ResponseEntity.ok(BaseResponse.success(userService.getByEmail(email)));
     }
 
+    @PatchMapping(value = "me")
+    @Operation(summary = "유저 정보 수정", description = "로그인한 유저의 정보(닉네임)를 수정합니다.")
+    public ResponseEntity<BaseResponse<Map<String, Long>>> updateUser(Authentication authentication,
+                                                                      @Validated(UserRequestDTO.updateGroup.class) @RequestBody UserRequestDTO dto) {
+        String email = authentication.getName();
+        Long id = userService.updateUser(email, dto);
+        Map<String, Long> responseBody = Collections.singletonMap("userId", id);
+        return ResponseEntity.ok(BaseResponse.success(responseBody));
+    }
+
 }
