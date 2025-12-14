@@ -52,6 +52,23 @@ export const getUser = async () => {
 		method: "GET",
 		headers: { "Content-Type": "application/json" },
 	});
+	if (!res.ok) {
+		throw new Error("유저 정보 조회 실패");
+	}
+	const { data } = await res.json();
+	return data;
+};
+
+// 유저 정보 수정
+export const updateUser = async ({ nickname }) => {
+	const res = await fetchWithAccess(`${BASE_URL}/users/me`, {
+		method: "PATCH",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ nickname }),
+	});
+	if (!res.ok) {
+		throw new Error("유저 정보 수정 실패");
+	}
 	const { data } = await res.json();
 	return data;
 };
