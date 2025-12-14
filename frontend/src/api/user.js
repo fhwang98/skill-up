@@ -46,6 +46,7 @@ export const join = async ({ email, password, nickname }) => {
 	return data;
 };
 
+// 유저 정보 조회
 export const getUser = async () => {
 	const res = await fetchWithAccess(`${BASE_URL}/users/me`, {
 		method: "GET",
