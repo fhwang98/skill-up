@@ -1,5 +1,14 @@
 import { logout } from "@/api/auth";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const Header = () => {
@@ -20,7 +29,7 @@ const Header = () => {
 
 	return (
 		<header>
-			<div className="flex justify-between items-center p-4">
+			<div className="flex justify-between items-center m-6">
 				<div className="font-bold">SkillUP</div>
 				<div className="flex gap-2">
 					{!isLoggedIn && !isLoginPage && (
@@ -33,13 +42,25 @@ const Header = () => {
 						</Button>
 					)}
 					{isLoggedIn && (
-						<Button
-							variant="outline"
-							onClick={handleLogout}
-							className="cursor-pointer"
-						>
-							로그아웃
-						</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger className="outline-none">
+								<Avatar className="cursor-pointer size-12">
+									<AvatarImage src="" />
+									<AvatarFallback>ME</AvatarFallback>
+								</Avatar>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent>
+								<DropdownMenuItem
+									onClick={() => navigate("/me")}
+									className="cursor-pointer"
+								>
+									내정보
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+									로그아웃
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					)}
 				</div>
 			</div>
