@@ -28,7 +28,7 @@ const LoginPage = () => {
 	// 자체 로그인 이벤트
 	const handleLogin = async (e) => {
 		e.preventDefault();
-		setError("");
+		setError(null);
 
 		if (email === "" || password === "") {
 			setError("이메일과 비밀번호를 입력하세요.");

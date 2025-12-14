@@ -86,7 +86,7 @@ function JoinPage() {
 	// 회원 가입 이벤트
 	const handleSignUp = async (e) => {
 		e.preventDefault();
-		setError("");
+		setError(null);
 
 		if (password.length < 8 || nickname.trim() === "" || email.trim() === "") {
 			setError("입력값을 다시 확인해주세요.");
