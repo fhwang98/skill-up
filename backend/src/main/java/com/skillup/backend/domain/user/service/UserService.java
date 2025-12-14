@@ -82,4 +82,29 @@ public class UserService {
                 .build();
     }
 
+    // 회원 정보 수정
+    @Transactional
+    public Long updateUser(String email, UserRequestDTO dto) {
+
+        log.info("회원정보 수정 요청 email: {}", email);
+        UserEntity entity = userRepository.findByEmailAndDeleted(email, false)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 사용자: {}", email);
+                    return new CustomException(ErrorCode.USER_NOT_FOUND);
+                });
+        // 자체 회원만 수정 가능
+        if(!entity.getProvider().equals(SocialProviderType.LOCAL)) {
+            log.warn("소셜 회원 정보 수정 불가");
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
+        log.info("기존 닉네임: {} , 변경 닉네임: {}", entity.getNickname(), dto.getNickname());
+
+        entity.updateUser(dto.getNickname());
+
+        return entity.getId();
+    }
+
+
+
 }
