@@ -64,19 +64,21 @@ public class UserService {
     }
 
     // 회원 정보 조회
+    @Transactional(readOnly = true)
     public UserResponseDTO getByEmail(String email) {
         log.info("회원 정보 조회 email: {}", email);
-        UserEntity user = userRepository.findByEmailAndDeleted(email, false)
+        UserEntity entity = userRepository.findByEmailAndDeleted(email, false)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 사용자: {}", email);
                     return new CustomException(ErrorCode.USER_NOT_FOUND);
                 });
         return UserResponseDTO
                 .builder()
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
+                .email(entity.getEmail())
+                .nickname(entity.getNickname())
+                .provider(entity.getProvider().name())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 

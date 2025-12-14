@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class UserResponseDTO {
     private String email;
     private String nickname;
+    private String provider;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
