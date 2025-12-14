@@ -2,7 +2,9 @@ package com.skillup.backend.domain.user.service;
 
 import com.skillup.backend.domain.user.dto.UserRequestDTO;
 import com.skillup.backend.domain.user.dto.UserResponseDTO;
+import com.skillup.backend.domain.user.entity.SocialProviderType;
 import com.skillup.backend.domain.user.entity.UserEntity;
+import com.skillup.backend.domain.user.entity.UserRoleType;
 import com.skillup.backend.domain.user.repository.UserRepository;
 import com.skillup.backend.global.exception.CustomException;
 import com.skillup.backend.global.exception.ErrorCode;
@@ -130,5 +132,74 @@ class UserServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);
     }
+
+    @Test
+    @DisplayName("회원 정보 수정 성공 - LOCAL 회원 닉네임 변경")
+    void updateUser_success() {
+        // given
+        UserRequestDTO signupDto =
+                new UserRequestDTO("update@test.com", "password", "기존닉네임");
+
+        Long userId = userService.createUser(signupDto);
+
+        UserRequestDTO updateDto =
+                UserRequestDTO.builder()
+                        .nickname("변경닉네임")
+                        .build();
+
+        // when
+        Long updatedId = userService.updateUser("update@test.com", updateDto);
+
+        // then
+        UserEntity updatedUser =
+                userRepository.findById(updatedId).orElseThrow();
+
+        assertThat(updatedId).isEqualTo(userId);
+        assertThat(updatedUser.getNickname()).isEqualTo("변경닉네임");
+    }
+    @Test
+    @DisplayName("회원 정보 수정 실패 - 존재하지 않는 사용자")
+    void updateUser_userNotFound_fail() {
+        // given
+        UserRequestDTO updateDto =
+                UserRequestDTO.builder()
+                        .nickname("변경닉네임")
+                        .build();
+
+        // when & then
+        assertThatThrownBy(() -> userService.updateUser("no@test.com", updateDto))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+    }
+    @Test
+    @DisplayName("회원 정보 수정 실패 - 소셜 회원은 수정 불가")
+    void updateUser_socialUser_fail() {
+        // given
+        UserEntity socialUser =
+                UserEntity.builder()
+                        .email("social@test.com")
+                        .password("")
+                        .nickname("소셜닉네임")
+                        .provider(SocialProviderType.KAKAO)
+                        .role(UserRoleType.ROLE_USER)
+                        .deleted(false)
+                        .build();
+
+        userRepository.save(socialUser);
+
+        UserRequestDTO updateDto =
+                UserRequestDTO.builder()
+                        .nickname("변경닉네임")
+                        .build();
+
+        // when & then
+        assertThatThrownBy(() -> userService.updateUser("social@test.com", updateDto))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+
+
 
 }

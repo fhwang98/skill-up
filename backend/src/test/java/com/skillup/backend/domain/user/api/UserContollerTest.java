@@ -21,8 +21,7 @@ import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -183,6 +182,58 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data.createdAt").value(now.minusDays(1).toString()))
                 .andExpect(jsonPath("$.data.updatedAt").value(now.toString()));
     }
+
+    @Test
+    @DisplayName("내 정보 수정 성공 - 닉네임 변경")
+    void updateUserMe_success() throws Exception {
+
+        // given
+        UserRequestDTO dto =
+                UserRequestDTO.builder()
+                        .nickname("변경닉네임")
+                        .build();
+
+        Mockito.when(userService.updateUser(Mockito.eq("me@test.com"), any()))
+                .thenReturn(1L);
+
+        Authentication authentication = Mockito.mock(Authentication.class);
+        Mockito.when(authentication.getName()).thenReturn("me@test.com");
+
+        // when & then
+        mockMvc.perform(
+                        patch("/users/me")
+                                .principal(authentication)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.userId").value(1L));
+    }
+    @Test
+    @DisplayName("내 정보 수정 실패 - Validation 오류")
+    void updateUserMe_validation_fail() throws Exception {
+
+        // given
+        UserRequestDTO dto =
+                UserRequestDTO.builder()
+                        .nickname("")
+                        .build();
+
+        Authentication authentication = Mockito.mock(Authentication.class);
+        Mockito.when(authentication.getName()).thenReturn("me@test.com");
+
+        // when & then
+        mockMvc.perform(
+                        patch("/users/me")
+                                .principal(authentication)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
 
 
 }
