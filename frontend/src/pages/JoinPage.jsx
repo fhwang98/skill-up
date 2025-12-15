@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { checkEmailExists, checkNicknameExists, join } from "@/api/user";
+import { checkEmailExists, checkNicknameExists, createUser } from "@/api/user";
 
 function JoinPage() {
 	const navigate = useNavigate();
@@ -94,7 +94,7 @@ function JoinPage() {
 		}
 
 		try {
-			const response = await join({ email, password, nickname });
+			const response = await createUser({ email, password, nickname });
 
 			if (!response.success) {
 				setError(response.error.message);

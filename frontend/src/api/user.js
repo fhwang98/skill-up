@@ -33,7 +33,7 @@ export const checkNicknameExists = async (nickname) => {
 };
 
 // 회원가입
-export const join = async ({ email, password, nickname }) => {
+export const createUser = async ({ email, password, nickname }) => {
 	const res = await fetch(`${BASE_URL}/users`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
