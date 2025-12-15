@@ -252,4 +252,54 @@ class UserControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }
+    @Test
+    @DisplayName("비밀번호 변경 성공 - 200 OK")
+    void updatePassword_success() throws Exception {
+        // given
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .password("password")
+                .newPassword("changedpw")
+                .build();
+
+        Mockito.when(userService.updateUserPassword(Mockito.eq("me@test.com"), any()))
+                .thenReturn(1L);
+
+        Authentication authentication = Mockito.mock(Authentication.class);
+        Mockito.when(authentication.getName()).thenReturn("me@test.com");
+
+        // when & then
+        mockMvc.perform(
+                        patch("/users/me/password")
+                                .principal(authentication)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.userId").value(1L))
+                .andDo(print());
+    }
+    @Test
+    @DisplayName("비밀번호 변경 실패 - password 누락 (Validation)")
+    void updatePassword_validation_password_fail() throws Exception {
+        // given
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .newPassword("changedpw")
+                .build();
+
+        Authentication authentication = Mockito.mock(Authentication.class);
+        Mockito.when(authentication.getName()).thenReturn("me@test.com");
+
+        // when & then
+        mockMvc.perform(
+                        patch("/users/me/password")
+                                .principal(authentication)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andDo(print());
+    }
+
 }
