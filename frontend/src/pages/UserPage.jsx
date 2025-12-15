@@ -1,5 +1,10 @@
 import { logout } from "@/api/auth";
-import { checkNicknameExists, getUser, updateUser } from "@/api/user";
+import {
+	changePassword,
+	checkNicknameExists,
+	getUser,
+	updateUser,
+} from "@/api/user";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -26,21 +31,27 @@ const UserPage = () => {
 	//정보 수정
 	const [isEditing, setIsEditing] = useState(false);
 	const [newNickname, setNewNickname] = useState("");
-	const [isNicknameValid, setIsNicknameValid] = useState(null); // null: 검사 전, true: 사용 가능, false: 중복
+	const [isNicknameValid, setIsNicknameValid] = useState(null);
 
 	//비밀번호 변경
 	const [isChangingPassword, setIsChangingPassword] = useState(false);
-	const [currentPassword, setCurrentPassword] = useState("");
+	const [password, setPassword] = useState("");
 	const [newPassword, setNewPassword] = useState("");
 	const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
 	const [error, setError] = useState(null);
 
+	// 유저 정보 조회
 	useEffect(() => {
 		const fetchUserInfo = async () => {
 			setError(null);
 			try {
-				const { email, nickname, provider, createdAt } = await getUser();
+				const response = await getUser();
+				if (!response.success) {
+					setError(response.error.message);
+					return;
+				}
+				const { email, nickname, provider, createdAt } = response.data;
 				setEmail(email);
 				setNickname(nickname);
 				setNewNickname(nickname);
@@ -51,25 +62,30 @@ const UserPage = () => {
 			}
 		};
 		fetchUserInfo();
-	}, [setEmail, setNickname, setProvider, setCreatedAt]);
+	}, []);
 
 	// nickname 입력창 변경 이벤트
 	useEffect(() => {
-		// nickname 중복 확인
 		const checkNickname = async () => {
-			if (
-				newNickname.length < 2 ||
-				newNickname.length > 10 ||
-				newNickname === nickname
-			) {
+			if (newNickname === nickname) {
+				setIsNicknameValid(null);
+				return;
+			}
+
+			if (newNickname.length < 2 || newNickname.length > 10) {
 				setIsNicknameValid(null);
 				return;
 			}
 
 			try {
-				const { exists } = await checkNicknameExists(newNickname);
+				const response = await checkNicknameExists(newNickname);
+				if (!response.success) {
+					setIsNicknameValid(null);
+					return;
+				}
+				const { exists } = response.data;
 				setIsNicknameValid(!exists);
-			} catch {
+			} catch (err) {
 				setIsNicknameValid(null);
 			}
 		};
@@ -78,20 +94,57 @@ const UserPage = () => {
 		return () => clearTimeout(delay);
 	}, [newNickname, nickname]);
 
-	const handleUserupdate = async (e) => {
+	// 정보 수정 이벤트
+	const handleUserUpdate = async (e) => {
 		e.preventDefault();
-		setError("");
+		setError(null);
 		if (!confirm("수정하시겠습니까?")) return;
 		try {
-			await updateUser({ nickname: newNickname });
+			const response = await updateUser({ nickname: newNickname });
+			if (!response.success) {
+				setError(response.error.message);
+				return;
+			}
 			setNickname(newNickname);
 			setIsEditing(false);
-		} catch (error) {
-			setError(error);
+		} catch (err) {
+			setError(err?.message ?? "요청 중 오류가 발생했습니다.");
 		}
 	};
-	const handlePasswordChange = () => {};
 
+	// 비밀번호 변경 이벤트
+	const handlePasswordChange = async (e) => {
+		e.preventDefault();
+		setError(null);
+
+		if (password === "") {
+			setError("비밀번호를 입력하세요.");
+			return;
+		}
+		if (newPassword.length < 8) {
+			setError("새 비밀번호는 최소 8자 이상이어야 합니다.");
+			return;
+		}
+		if (newPassword !== confirmNewPassword) {
+			setError("새 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+			return;
+		}
+
+		if (!confirm("비밀번호를 변경하시겠습니까?")) return;
+		try {
+			const response = await changePassword({ password, newPassword });
+			if (!response.success) {
+				console.log(response.error.message);
+				setError(response.error.message);
+				return;
+			}
+			handleLogout();
+		} catch (err) {
+			setError(err?.message ?? "요청 중 오류가 발생했습니다.");
+		}
+	};
+
+	// 로그아웃 이벤트
 	const handleLogout = async () => {
 		try {
 			await logout();
@@ -164,10 +217,11 @@ const UserPage = () => {
 								<Label className="w-1/3">현재 비밀번호</Label>
 								<Input
 									type="password"
-									value={currentPassword}
-									onChange={(e) => setCurrentPassword(e.target.value)}
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
 								/>
 							</div>
+
 							<Separator />
 							<div className="flex justify-between items-center gap-4">
 								<Label className="w-1/3">새 비밀번호</Label>
@@ -177,6 +231,7 @@ const UserPage = () => {
 									onChange={(e) => setNewPassword(e.target.value)}
 								/>
 							</div>
+
 							<div className="flex justify-between items-center gap-4">
 								<Label className="w-1/3">비밀번호 확인</Label>
 								<Input
@@ -185,6 +240,19 @@ const UserPage = () => {
 									onChange={(e) => setConfirmNewPassword(e.target.value)}
 								/>
 							</div>
+							{error ? (
+								<p className="text-sm text-red-600 text-right">{error}</p>
+							) : newPassword.length > 0 &&
+							  (newPassword.length < 8 || newPassword.length > 16) ? (
+								<p className="text-sm text-red-600 text-right">
+									비밀번호는 8~16자 이내로 입력해주세요.
+								</p>
+							) : confirmNewPassword.length > 0 &&
+							  newPassword !== confirmNewPassword ? (
+								<p className="text-sm text-red-600 text-right">
+									새 비밀번호와 비밀번호 확인이 일치하지 않습니다.
+								</p>
+							) : null}
 						</div>
 					)}
 				</CardContent>
@@ -192,14 +260,18 @@ const UserPage = () => {
 					{isEditing && (
 						<div className="w-full  space-y-4">
 							<Button
-								onClick={handleUserupdate}
+								onClick={handleUserUpdate}
 								className="w-full cursor-pointer"
-								disabled={isNicknameValid !== true}
+								disabled={isNicknameValid !== true || newNickname === nickname}
 							>
 								수정
 							</Button>
 							<Button
-								onClick={() => setIsEditing(false)}
+								onClick={() => {
+									setError(null);
+									setIsEditing(false);
+									setNewNickname(nickname);
+								}}
 								className="w-full cursor-pointer"
 								variant="outline"
 							>
@@ -209,11 +281,21 @@ const UserPage = () => {
 					)}
 					{isChangingPassword && (
 						<div className="w-full space-y-4">
-							<Button onClick={handlePasswordChange} className="w-full cursor-pointer">
+							<Button
+								onClick={handlePasswordChange}
+								className="w-full cursor-pointer"
+								disabled={newPassword !== confirmNewPassword || newPassword.length < 8}
+							>
 								비밀번호 변경
 							</Button>
 							<Button
-								onClick={() => setIsChangingPassword(false)}
+								onClick={() => {
+									setError(null);
+									setPassword("");
+									setNewPassword("");
+									setConfirmNewPassword("");
+									setIsChangingPassword(false);
+								}}
 								className="w-full cursor-pointer"
 								variant="outline"
 							>
