@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
-	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
@@ -39,10 +38,14 @@ function JoinPage() {
 			}
 
 			try {
-				const res = await checkEmailExists(email);
+				const response = await checkEmailExists(email);
 
-				const response = await res.json();
-				const exists = response.data.exists;
+				if (!response.success) {
+					setIsEmailValid(null);
+					return;
+				}
+
+				const { exists } = response.data;
 				setIsEmailValid(!exists);
 			} catch {
 				setIsEmailValid(null);
@@ -55,7 +58,6 @@ function JoinPage() {
 
 	// nickname 입력창 변경 이벤트
 	useEffect(() => {
-		// nickname 중복 확인
 		const checkNickname = async () => {
 			if (nickname.length < 2 || nickname.length > 10) {
 				setIsNicknameValid(null);
@@ -63,10 +65,14 @@ function JoinPage() {
 			}
 
 			try {
-				const res = await checkNicknameExists(nickname);
+				const response = await checkNicknameExists(nickname);
 
-				const response = await res.json();
-				const exists = response.data.exists;
+				if (!response.success) {
+					setIsNicknameValid(null);
+					return;
+				}
+
+				const { exists } = response.data;
 				setIsNicknameValid(!exists);
 			} catch {
 				setIsNicknameValid(null);
@@ -80,7 +86,7 @@ function JoinPage() {
 	// 회원 가입 이벤트
 	const handleSignUp = async (e) => {
 		e.preventDefault();
-		setError("");
+		setError(null);
 
 		if (password.length < 8 || nickname.trim() === "" || email.trim() === "") {
 			setError("입력값을 다시 확인해주세요.");
@@ -88,13 +94,17 @@ function JoinPage() {
 		}
 
 		try {
-			const res = await join({ email, password, nickname });
+			const response = await join({ email, password, nickname });
 
-			if (!res.ok) throw new Error("회원가입 실패");
+			if (!response.success) {
+				setError(response.error.message);
+				return;
+			}
+
 			alert("회원가입이 완료되었습니다.");
 			navigate("/login");
 		} catch {
-			setError("회원가입 중 오류가 발생했습니다.");
+			setError("서버와 통신 중 오류가 발생했습니다.");
 		}
 	};
 
@@ -102,59 +112,60 @@ function JoinPage() {
 	return (
 		<div className="flex items-center justify-center min-h-screen bg-gray-100">
 			<Card className="w-full max-w-sm min-w-sm m-6">
-				<CardHeader>
+				<CardHeader className="text-center">
 					<CardTitle className="text-2xl">회원 가입</CardTitle>
-					<CardDescription>필수 정보를 입력하여 계정을 생성하세요.</CardDescription>
 				</CardHeader>
 				<form onSubmit={handleSignUp}>
-					<CardContent className="space-y-4">
-						<div className="space-y-2">
-							<Label htmlFor="email">이메일</Label>
-							<Input
-								id="email"
-								type="text"
-								placeholder="이메일 주소"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								required
-							/>
-							{isEmailValid === null ? null : isEmailValid ? (
-								<p className="text-sm text-green-600">사용 가능한 이메일입니다.</p>
-							) : (
-								<p className="text-sm text-red-600">이미 사용 중인 이메일입니다.</p>
-							)}
+					<CardContent>
+						<div className="grid w-full items-center gap-4">
+							<div className="flex flex-col space-y-1.5">
+								<Label htmlFor="email">이메일</Label>
+								<Input
+									id="email"
+									type="text"
+									placeholder="이메일 주소"
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									required
+								/>
+								{isEmailValid === null ? null : isEmailValid ? (
+									<p className="text-sm text-green-600">사용 가능한 이메일입니다.</p>
+								) : (
+									<p className="text-sm text-red-600">이미 사용 중인 이메일입니다.</p>
+								)}
+							</div>
+							<div className="flex flex-col space-y-1.5">
+								<Label htmlFor="password">비밀번호</Label>
+								<Input
+									id="password"
+									type="password"
+									placeholder="비밀번호 (8자 이상)"
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+									required
+									minLength={8}
+								/>
+							</div>
+							<div className="flex flex-col space-y-1.5">
+								<Label htmlFor="nickname">닉네임</Label>
+								<Input
+									id="nickname"
+									type="text"
+									placeholder="닉네임"
+									value={nickname}
+									onChange={(e) => setNickname(e.target.value)}
+									required
+								/>
+								{isNicknameValid === null ? null : isNicknameValid ? (
+									<p className="text-sm text-green-600">사용 가능한 닉네임입니다.</p>
+								) : (
+									<p className="text-sm text-red-600">이미 사용 중인 닉네임입니다.</p>
+								)}
+							</div>
+							{error && <p className="text-sm text-red-600">{error}</p>}
 						</div>
-						<div className="space-y-2">
-							<Label htmlFor="password">비밀번호</Label>
-							<Input
-								id="password"
-								type="password"
-								placeholder="비밀번호 (8자 이상)"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								required
-								minLength={8}
-							/>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="nickname">닉네임</Label>
-							<Input
-								id="nickname"
-								type="text"
-								placeholder="닉네임"
-								value={nickname}
-								onChange={(e) => setNickname(e.target.value)}
-								required
-							/>
-							{isNicknameValid === null ? null : isNicknameValid ? (
-								<p className="text-sm text-green-600">사용 가능한 닉네임입니다.</p>
-							) : (
-								<p className="text-sm text-red-600">이미 사용 중인 닉네임입니다.</p>
-							)}
-						</div>
-						{error && <p className="text-sm text-red-600">{error}</p>}
 					</CardContent>
-					<CardFooter>
+					<CardFooter className="flex flex-col space-y-4">
 						<Button
 							type="submit"
 							className="w-full mt-6 cursor-pointer"

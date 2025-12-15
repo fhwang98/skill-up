@@ -1,6 +1,7 @@
 package com.skillup.backend.domain.user.service;
 
 import com.skillup.backend.domain.user.dto.UserRequestDTO;
+import com.skillup.backend.domain.user.dto.UserResponseDTO;
 import com.skillup.backend.domain.user.entity.SocialProviderType;
 import com.skillup.backend.domain.user.entity.UserEntity;
 import com.skillup.backend.domain.user.entity.UserRoleType;
@@ -62,5 +63,75 @@ public class UserService {
         return userRepository.existsByNickname(dto.getNickname());
     }
 
+    // 회원 정보 조회
+    @Transactional(readOnly = true)
+    public UserResponseDTO getByEmail(String email) {
+        log.info("회원 정보 조회 email: {}", email);
+        UserEntity entity = userRepository.findByEmailAndDeleted(email, false)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 사용자: {}", email);
+                    return new CustomException(ErrorCode.USER_NOT_FOUND);
+                });
+        return UserResponseDTO
+                .builder()
+                .email(entity.getEmail())
+                .nickname(entity.getNickname())
+                .provider(entity.getProvider().name())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
 
+    // 회원 정보 수정
+    @Transactional
+    public Long updateUser(String email, UserRequestDTO dto) {
+
+        log.info("회원정보 수정 요청 email: {}", email);
+        UserEntity entity = userRepository.findByEmailAndDeleted(email, false)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 사용자: {}", email);
+                    return new CustomException(ErrorCode.USER_NOT_FOUND);
+                });
+        // 자체 회원만 수정 가능
+        if(!entity.getProvider().equals(SocialProviderType.LOCAL)) {
+            log.warn("소셜 회원 정보 수정 불가");
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
+        log.info("기존 닉네임: {} , 변경 닉네임: {}", entity.getNickname(), dto.getNickname());
+
+        entity.updateUser(dto.getNickname());
+
+        return entity.getId();
+    }
+
+    //  비밀번호 변경 요청
+    @Transactional
+    public Long updateUserPassword(String email, UserRequestDTO dto) {
+        log.info("비밀번호 변경 요청 email: {}", email);
+        UserEntity entity = userRepository.findByEmailAndDeleted(email, false)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 사용자: {}", email);
+                    return new CustomException(ErrorCode.USER_NOT_FOUND);
+                });
+        // 자체 회원만 변경 가능
+        if(!entity.getProvider().equals(SocialProviderType.LOCAL)) {
+            log.warn("소셜 회원 정보 수정 불가");
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+        // 현재 비밀번호가 일치하지 않음
+        if (!passwordEncoder.matches(dto.getPassword(), entity.getPassword())) {
+            log.warn("비밀번호 일치하지 않음");
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+        // 현재 비밀번호와 새로운 비밀번호가 일치함
+        if (dto.getPassword().equals(dto.getNewPassword())) {
+            log.warn("기존 비밀번호와 새로운 비밀번호 일치");
+            throw new CustomException(ErrorCode.SAME_AS_OLD_PASSWORD);
+        }
+
+        entity.updatePassword(passwordEncoder.encode(dto.getNewPassword()));
+
+        return entity.getId();
+    }
 }

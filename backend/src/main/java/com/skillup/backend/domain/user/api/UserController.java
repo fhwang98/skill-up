@@ -1,6 +1,7 @@
 package com.skillup.backend.domain.user.api;
 
 import com.skillup.backend.domain.user.dto.UserRequestDTO;
+import com.skillup.backend.domain.user.dto.UserResponseDTO;
 import com.skillup.backend.domain.user.service.UserService;
 import com.skillup.backend.global.common.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -71,6 +73,34 @@ public class UserController {
         Map<String, Long> responseBody = Collections.singletonMap("userId", id);
         return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponse.success(responseBody));
 
+    }
+
+
+    @GetMapping(value = "/me")
+    @Operation(summary = "유저 정보 확인", description = "로그인한 유저의 이메일과 닉네임을 확인합니다.")
+    public ResponseEntity<BaseResponse<UserResponseDTO>> getUser(Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(BaseResponse.success(userService.getByEmail(email)));
+    }
+
+    @PatchMapping(value = "/me")
+    @Operation(summary = "유저 정보 수정", description = "로그인한 유저의 정보(닉네임)를 수정합니다.")
+    public ResponseEntity<BaseResponse<Map<String, Long>>> updateUser(Authentication authentication,
+                                                                      @Validated(UserRequestDTO.updateGroup.class) @RequestBody UserRequestDTO dto) {
+        String email = authentication.getName();
+        Long id = userService.updateUser(email, dto);
+        Map<String, Long> responseBody = Collections.singletonMap("userId", id);
+        return ResponseEntity.ok(BaseResponse.success(responseBody));
+    }
+
+    @PatchMapping(value = "/me/password")
+    @Operation(summary = "비밀번호 변경", description = "로그인한 유저의 비밀번호를 변경합니다.")
+    public ResponseEntity<BaseResponse<Map<String, Long>>> updateUserPassword(Authentication authentication,
+                                                                      @Validated(UserRequestDTO.passwordGroup.class) @RequestBody UserRequestDTO dto) {
+        String email = authentication.getName();
+        Long id = userService.updateUserPassword(email, dto);
+        Map<String, Long> responseBody = Collections.singletonMap("userId", id);
+        return ResponseEntity.ok(BaseResponse.success(responseBody));
     }
 
 }

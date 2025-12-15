@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
-	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
@@ -29,27 +28,26 @@ const LoginPage = () => {
 	// 자체 로그인 이벤트
 	const handleLogin = async (e) => {
 		e.preventDefault();
-		setError("");
+		setError(null);
 
 		if (email === "" || password === "") {
 			setError("이메일과 비밀번호를 입력하세요.");
 			return;
 		}
 
-		// API 요청
 		try {
-			const res = await login(email, password);
+			const response = await login(email, password);
 
-			if (!res.ok) throw new Error("로그인 실패");
+			if (!response.success) {
+				setError(response.error.message);
+				return;
+			}
 
-			const response = await res.json();
-			const data = response.data;
-
-			localStorage.setItem("accessToken", data.accessToken);
-
+			const { accessToken } = response.data;
+			localStorage.setItem("accessToken", accessToken);
 			navigate("/");
-		} catch (err) {
-			setError("이메일 또는 비밀번호가 틀렸습니다.", err);
+		} catch {
+			setError("서버와 통신할 수 없습니다.");
 		}
 	};
 

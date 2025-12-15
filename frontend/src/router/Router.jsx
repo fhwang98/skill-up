@@ -4,6 +4,7 @@ import MainPage from "@/pages/MainPage";
 import { createBrowserRouter } from "react-router-dom";
 import LoginPage from "@/pages/LoginPage";
 import LoginCallbackPage from "@/pages/LoginCallbackPage";
+import UserPage from "@/pages/UserPage";
 
 const router = createBrowserRouter([
 	{
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
 			{
 				path: "/oauth2/callback",
 				element: <LoginCallbackPage />,
+			},
+			{
+				path: "/me",
+				element: <UserPage />,
 			},
 		],
 	},

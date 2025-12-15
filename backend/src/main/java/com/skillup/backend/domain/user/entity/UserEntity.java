@@ -46,4 +46,12 @@ public class UserEntity extends BaseEntity {
         this.nickname = nickname;
         this.providerId = providerId;
     }
+
+    public void updateUser(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
 }
