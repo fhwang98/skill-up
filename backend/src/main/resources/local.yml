@@ -10,7 +10,7 @@ spring:
       host: localhost
       port: 6379
   datasource:
-    url: jdbc:h2:mem:local-db;MODE=MySQL
+    url: jdbc:h2:./data/local_db;MODE=MySQL
     driver-class-name: org.h2.Driver
     username: sa
     password: password
