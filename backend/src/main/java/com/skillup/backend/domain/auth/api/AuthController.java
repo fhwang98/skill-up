@@ -7,15 +7,19 @@ import com.skillup.backend.global.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+@Slf4j
 @Tag(name = "AUTH API", description = "사용자 인증 관련 api")
-@RestController(value = "/auth")
+@RestController
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -26,6 +30,9 @@ public class AuthController {
     public ResponseEntity<BaseResponse<Map<String, String>>> tokenRefresh(
             @CookieValue(value = "refreshToken", required = false) String refreshToken
     ) {
+
+        log.info("토큰 재발급 요청");
+        log.info("refreshToken: {}", refreshToken);
         if (refreshToken == null) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
