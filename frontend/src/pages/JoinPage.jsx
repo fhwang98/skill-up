@@ -84,7 +84,7 @@ function JoinPage() {
 	}, [nickname]);
 
 	// 회원 가입 이벤트
-	const handleSignUp = async (e) => {
+	const handleJoin = async (e) => {
 		e.preventDefault();
 		setError(null);
 
@@ -115,7 +115,7 @@ function JoinPage() {
 				<CardHeader className="text-center">
 					<CardTitle className="text-2xl">회원 가입</CardTitle>
 				</CardHeader>
-				<form onSubmit={handleSignUp}>
+				<form onSubmit={handleJoin}>
 					<CardContent>
 						<div className="grid w-full items-center gap-4">
 							<div className="flex flex-col space-y-1.5">
