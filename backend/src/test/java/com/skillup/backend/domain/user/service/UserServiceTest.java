@@ -34,7 +34,11 @@ class UserServiceTest {
     @DisplayName("회원가입 성공")
     void signup_success() {
         // given
-        UserRequestDTO dto = new UserRequestDTO("test@test.com", "password", "테스터");
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .email("test@test.com")
+                .password("password")
+                .nickname("테스터")
+                .build();
 
         // when
         Long userId = userService.createUser(dto);
@@ -46,15 +50,25 @@ class UserServiceTest {
         assertThat(savedUser.getEmail()).isEqualTo(dto.getEmail());
         assertThat(passwordEncoder.matches(dto.getPassword(), savedUser.getPassword())).isTrue();
         assertThat(savedUser.isDeleted()).isFalse();
-        assertThat(savedUser.getRole().name()).isEqualTo("ROLE_USER");
+        assertThat(savedUser.getRole()).isEqualTo(UserRoleType.ROLE_USER);
     }
 
     @Test
     @DisplayName("중복 이메일 - 회원가입 실패")
     void signup_duplicateEmail_fail() {
         // given
-        UserRequestDTO dto1 = new UserRequestDTO("dup@test.com", "pass", "홍길동");
-        UserRequestDTO dto2 = new UserRequestDTO("dup@test.com", "pass", "둘리");
+        UserRequestDTO dto1 = UserRequestDTO.builder()
+                .email("dup@test.com")
+                .password("pass")
+                .nickname("홍길동")
+                .build();
+
+        UserRequestDTO dto2 = UserRequestDTO.builder()
+                .email("dup@test.com")
+                .password("pass")
+                .nickname("둘리")
+                .build();
+
         userService.createUser(dto1);
 
         // when & then
@@ -68,8 +82,19 @@ class UserServiceTest {
     @DisplayName("중복 닉네임 - 회원가입 실패")
     void signup_duplicateNickname_fail() {
         // given
-        userService.createUser(new UserRequestDTO("a@test.com", "pass", "닉네임"));
-        UserRequestDTO dto = new UserRequestDTO("b@test.com", "pass", "닉네임");
+        userService.createUser(
+                UserRequestDTO.builder()
+                        .email("a@test.com")
+                        .password("pass")
+                        .nickname("닉네임")
+                        .build()
+        );
+
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .email("b@test.com")
+                .password("pass")
+                .nickname("닉네임")
+                .build();
 
         // when & then
         assertThatThrownBy(() -> userService.createUser(dto))
@@ -82,11 +107,21 @@ class UserServiceTest {
     @DisplayName("이메일 중복 검사 - 중복됨")
     void existEmail_ReturnsTrue_WhenEmailExists() {
         // given
-        UserRequestDTO dto1 = new UserRequestDTO("dup@test.com", "pass", "홍길동");
-        UserRequestDTO dto2 = new UserRequestDTO("dup@test.com", "pass", "둘리");
-        userService.createUser(dto1);
+        userService.createUser(
+                UserRequestDTO.builder()
+                        .email("dup@test.com")
+                        .password("pass")
+                        .nickname("홍길동")
+                        .build()
+        );
+
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .email("dup@test.com")
+                .build();
+
         // when
-        boolean exists = userService.existsByEmail(dto2);
+        boolean exists = userService.existsByEmail(dto);
+
         // then
         assertThat(exists).isTrue();
     }
@@ -95,11 +130,21 @@ class UserServiceTest {
     @DisplayName("닉네임 중복 검사 - 중복됨")
     void existNickname_ReturnsTrue_WhenNicknameExists() {
         // given
-        UserRequestDTO dto1 = new UserRequestDTO("dup@test.com", "pass", "닉네임");
-        UserRequestDTO dto2 = new UserRequestDTO("dup2@test.com", "pass", "닉네임");
-        userService.createUser(dto1);
+        userService.createUser(
+                UserRequestDTO.builder()
+                        .email("dup@test.com")
+                        .password("pass")
+                        .nickname("닉네임")
+                        .build()
+        );
+
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .nickname("닉네임")
+                .build();
+
         // when
-        boolean exists = userService.existsByNickname(dto2);
+        boolean exists = userService.existsByNickname(dto);
+
         // then
         assertThat(exists).isTrue();
     }
@@ -108,8 +153,11 @@ class UserServiceTest {
     @DisplayName("회원 정보 조회 성공")
     void getUser_success() {
         // given
-        UserRequestDTO dto =
-                new UserRequestDTO("me@test.com", "password", "조회유저");
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .email("me@test.com")
+                .password("password")
+                .nickname("조회유저")
+                .build();
 
         userService.createUser(dto);
 
@@ -137,34 +185,33 @@ class UserServiceTest {
     @DisplayName("회원 정보 수정 성공 - LOCAL 회원 닉네임 변경")
     void updateUser_success() {
         // given
-        UserRequestDTO signupDto =
-                new UserRequestDTO("update@test.com", "password", "기존닉네임");
-
-        Long userId = userService.createUser(signupDto);
-
-        UserRequestDTO updateDto =
+        userService.createUser(
                 UserRequestDTO.builder()
-                        .nickname("변경닉네임")
-                        .build();
+                        .email("update@test.com")
+                        .password("password")
+                        .nickname("기존닉네임")
+                        .build()
+        );
+
+        UserRequestDTO updateDto = UserRequestDTO.builder()
+                .nickname("변경닉네임")
+                .build();
 
         // when
         Long updatedId = userService.updateUser("update@test.com", updateDto);
 
         // then
-        UserEntity updatedUser =
-                userRepository.findById(updatedId).orElseThrow();
-
-        assertThat(updatedId).isEqualTo(userId);
+        UserEntity updatedUser = userRepository.findById(updatedId).orElseThrow();
         assertThat(updatedUser.getNickname()).isEqualTo("변경닉네임");
     }
+
     @Test
     @DisplayName("회원 정보 수정 실패 - 존재하지 않는 사용자")
     void updateUser_userNotFound_fail() {
         // given
-        UserRequestDTO updateDto =
-                UserRequestDTO.builder()
-                        .nickname("변경닉네임")
-                        .build();
+        UserRequestDTO updateDto = UserRequestDTO.builder()
+                .nickname("변경닉네임")
+                .build();
 
         // when & then
         assertThatThrownBy(() -> userService.updateUser("no@test.com", updateDto))
@@ -176,7 +223,7 @@ class UserServiceTest {
     @DisplayName("회원 정보 수정 실패 - 소셜 회원은 수정 불가")
     void updateUser_socialUser_fail() {
         // given
-        UserEntity socialUser =
+        userRepository.save(
                 UserEntity.builder()
                         .email("social@test.com")
                         .password("")
@@ -184,14 +231,11 @@ class UserServiceTest {
                         .provider(SocialProviderType.KAKAO)
                         .role(UserRoleType.ROLE_USER)
                         .deleted(false)
-                        .build();
+                        .build());
 
-        userRepository.save(socialUser);
-
-        UserRequestDTO updateDto =
-                UserRequestDTO.builder()
-                        .nickname("변경닉네임")
-                        .build();
+        UserRequestDTO updateDto = UserRequestDTO.builder()
+                .nickname("변경닉네임")
+                .build();
 
         // when & then
         assertThatThrownBy(() -> userService.updateUser("social@test.com", updateDto))
@@ -199,7 +243,4 @@ class UserServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INVALID_REQUEST);
     }
-
-
-
 }
