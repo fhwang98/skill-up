@@ -243,4 +243,134 @@ class UserServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INVALID_REQUEST);
     }
+
+    @Test
+    @DisplayName("비밀번호 변경 테스트")
+    void updatePassword_success() {
+        // given
+        userService.createUser(
+                UserRequestDTO.builder()
+                        .email("pw@test.com")
+                        .password("password")
+                        .nickname("닉네임")
+                        .build()
+        );
+
+        UserRequestDTO passwodDto = UserRequestDTO.builder()
+                .password("password")
+                .newPassword("changedpw")
+                .build();
+
+        // when
+        Long updatedId = userService.updateUserPassword("pw@test.com", passwodDto);
+
+        // then
+        UserEntity updatedUser = userRepository.findById(updatedId).orElseThrow();
+        // 기존 비밀번호는 더 이상 맞지 않아야 함
+        assertThat(passwordEncoder.matches("password", updatedUser.getPassword()))
+                .isFalse();
+
+        // 새 비밀번호는 정상적으로 매칭되어야 함
+        assertThat(passwordEncoder.matches("changedpw", updatedUser.getPassword()))
+                .isTrue();
+
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 실패 - 존재하지 않는 사용자")
+    void updatePassword_userNotFound_fail() {
+        // given
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .password("password")
+                .newPassword("changedpw")
+                .build();
+
+        // when & then
+        assertThatThrownBy(() ->
+                userService.updateUserPassword("no@test.com", dto)
+        )
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+    }
+    @Test
+    @DisplayName("비밀번호 변경 실패 - 소셜 회원")
+    void updatePassword_socialUser_fail() {
+        // given
+        userRepository.save(
+                UserEntity.builder()
+                        .email("social@test.com")
+                        .password("")
+                        .nickname("소셜유저")
+                        .provider(SocialProviderType.KAKAO)
+                        .role(UserRoleType.ROLE_USER)
+                        .deleted(false)
+                        .build()
+        );
+
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .password("password")
+                .newPassword("changedpw")
+                .build();
+
+        // when & then
+        assertThatThrownBy(() ->
+                userService.updateUserPassword("social@test.com", dto)
+        )
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+    @Test
+    @DisplayName("비밀번호 변경 실패 - 기존 비밀번호 불일치")
+    void updatePassword_wrongPassword_fail() {
+        // given
+        userService.createUser(
+                UserRequestDTO.builder()
+                        .email("pw@test.com")
+                        .password("password")
+                        .nickname("닉네임")
+                        .build()
+        );
+
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .password("wrongpw")        // 틀린 기존 비밀번호
+                .newPassword("changedpw")
+                .build();
+
+        // when & then
+        assertThatThrownBy(() ->
+                userService.updateUserPassword("pw@test.com", dto)
+        )
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_PASSWORD);
+    }
+    @Test
+    @DisplayName("비밀번호 변경 실패 - 기존 비밀번호와 동일")
+    void updatePassword_samePassword_fail() {
+        // given
+        userService.createUser(
+                UserRequestDTO.builder()
+                        .email("pw@test.com")
+                        .password("password")
+                        .nickname("닉네임")
+                        .build()
+        );
+
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .password("password")
+                .newPassword("password")   // 동일
+                .build();
+
+        // when & then
+        assertThatThrownBy(() ->
+                userService.updateUserPassword("pw@test.com", dto)
+        )
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.SAME_AS_OLD_PASSWORD);
+    }
+
+
 }
