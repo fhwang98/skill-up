@@ -1,4 +1,3 @@
-
 # SkillUp
 
 스터디/모임을 생성하고, 참가 신청/승인/관리를 통해 함께 성장할 수 있는 **스터디 매칭 플랫폼**입니다.  
@@ -30,51 +29,58 @@ Spring Security, JWT, OAuth2, JPA 기반 백엔드 역량을 증명하기 위한
 ## 3. 기술 스택
 
 ### Backend
-| 항목 | 사용 기술 |
-|------|---------|
-| Language | Java 17 |
-| Framework | Spring Boot 3.5.8 |
-| Security | Spring Security, OAuth2 Client, JWT |
-| DB | MySQL |
-| ORM | Spring Data JPA |
-| API Docs | Springdoc OpenAPI(Swagger) |
-| Build | Gradle |
-| Test | JUnit5 + AssertJ |
-| Logging | Logback |
+
+| 항목      | 사용 기술                           |
+| --------- | ----------------------------------- |
+| Language  | Java 17                             |
+| Framework | Spring Boot 3.5.8                   |
+| Security  | Spring Security, OAuth2 Client, JWT |
+| DB        | MySQL                               |
+| ORM       | Spring Data JPA                     |
+| API Docs  | Springdoc OpenAPI(Swagger)          |
+| Build     | Gradle                              |
+| Test      | JUnit5 + AssertJ                    |
+| Logging   | Logback                             |
 
 ### Frontend
-| 항목 | 사용 기술 |
-|------|---------|
-| Language | JavaScript |
-| Library | React 18 |
-| Routing | React Router |
-| HTTP | fetch API |
-| Dev Tool | Vite |
+
+| 항목     | 사용 기술    |
+| -------- | ------------ |
+| Language | JavaScript   |
+| Library  | React 18     |
+| Routing  | React Router |
+| HTTP     | fetch API    |
+| Dev Tool | Vite         |
 
 ---
 
 ## 4. 주요 기능
 
 ### 인증/인가
+
 - 회원가입 / 로그인 / 로그아웃
 - JWT Access Token + Refresh Token 발급 및 재발급
 - OAuth2 기반 소셜 로그인
 - 회원 탈퇴(Soft Delete)
 
 ### 사용자(User)
+
 - 내 정보 조회/수정
 - 생성한 스터디 / 참여중 / 신청중 / 북마크 목록 조회
 
 ### 스터디(Study)
+
 - CRUD
 - 검색 / 정렬 / 필터(태그, 지역, 모집중)
 - 상세 조회
 
 ### 참가 관리
+
 - 참가 신청/취소
 - 스터디장 승인/거절 관리
 
 ### 북마크
+
 - 등록/해제
 - 북마크 목록 조회
 
@@ -97,19 +103,17 @@ Spring Security, JWT, OAuth2, JPA 기반 백엔드 역량을 증명하기 위한
 ## 6. 패키지 구조
 
 ```
-com.skillup
- ├─ SkillUpApplication.java
+com.skillup.backend
+ ├─ BackendApplication.java
  ├─ global
- │   ├─ config
- │   ├─ security
- │   ├─ exception
  │   ├─ common
- │   └─ logging
+ │   ├─ config
+ │   ├─ exception
+ │   └─ handler
  ├─ domain
  │   ├─ user
  │   ├─ auth
  │   ├─ study
- │   ├─ token
  │   └─ ...
  └─ ...
 ```
@@ -118,21 +122,22 @@ com.skillup
 
 ## 7. ERD 개요
 
-| Entity | 설명 |
-|--------|------|
-| User | 회원 |
-| Study | 스터디 |
-| StudyParticipant | N:M 중간 엔티티(참가 정보) |
-| Tag | 태그 |
-| StudyTag | Study-Tag N:M |
-| StudyBookmark | 스터디 북마크 |
-| RefreshToken | 토큰 관리 |
+| Entity        | 설명                       |
+| ------------- | -------------------------- |
+| User          | 회원                       |
+| Study         | 스터디                     |
+| StudyMember   | N:M 중간 엔티티(참가 정보) |
+| Tag           | 태그                       |
+| StudyTag      | Study-Tag N:M              |
+| StudyBookmark | 스터디 북마크              |
+| RefreshToken  | 토큰 관리                  |
 
 관계 요약
+
 - User 1 : N Study(Owner)
 - User N : M Study (Bookmark)
 - Study N : M Tag
-- Study 1 : N Participant
+- Study 1 : N Member
 - User 1 : N RefreshToken
 
 ---
@@ -140,28 +145,31 @@ com.skillup
 ## 8. REST API 요약
 
 ### Auth
-| Method | URL | 기능 |
-|--------|-----|----|
-| POST | /api/v1/auth/signup | 회원가입 |
-| POST | /api/v1/auth/login | 로그인 |
-| POST | /api/v1/auth/reissue | 토큰 재발급 |
-| POST | /api/v1/auth/logout | 로그아웃 |
+
+| Method | URL                  | 기능        |
+| ------ | -------------------- | ----------- |
+| POST   | /api/v1/auth/login   | 로그인      |
+| POST   | /api/v1/auth/logout  | 로그아웃    |
+| POST   | /api/v1/auth/refresh | 토큰 재발급 |
 
 ### User
-| Method | URL | 기능 |
-|--------|-----|----|
-| GET | /api/v1/users/me | 내 정보 조회 |
-| PATCH | /api/v1/users/me | 정보 수정 |
-| DELETE | /api/v1/users/me | 탈퇴 |
+
+| Method | URL              | 기능         |
+| ------ | ---------------- | ------------ |
+| POST   | /api/v1/users    | 회원가입     |
+| GET    | /api/v1/users/me | 내 정보 조회 |
+| PATCH  | /api/v1/users/me | 정보 수정    |
+| DELETE | /api/v1/users/me | 회원 탈퇴    |
 
 ### Study
-| Method | URL | 기능 |
-|--------|-----|----|
-| POST | /api/v1/studies | 생성 |
-| GET | /api/v1/studies | 목록 조회 |
-| GET | /api/v1/studies/{id} | 상세 조회 |
-| PATCH | /api/v1/studies/{id} | 수정 |
-| DELETE | /api/v1/studies/{id} | 삭제 |
+
+| Method | URL                  | 기능      |
+| ------ | -------------------- | --------- |
+| POST   | /api/v1/studies      | 생성      |
+| GET    | /api/v1/studies      | 목록 조회 |
+| GET    | /api/v1/studies/{id} | 상세 조회 |
+| PATCH  | /api/v1/studies/{id} | 수정      |
+| DELETE | /api/v1/studies/{id} | 삭제      |
 
 ---
 
