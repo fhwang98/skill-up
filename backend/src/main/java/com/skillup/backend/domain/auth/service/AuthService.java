@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +41,7 @@ public class AuthService extends DefaultOAuth2UserService implements UserDetails
         UserEntity user = userRepository.findByEmailAndDeleted(email, false)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 사용자: {}", email);
-                    return new CustomException(ErrorCode.USER_NOT_FOUND);
+                    return new UsernameNotFoundException("USER_NOT_FOUND");
                 });
         return new CustomUserDetails(user);
     }
@@ -76,20 +77,41 @@ public class AuthService extends DefaultOAuth2UserService implements UserDetails
             Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
             nickname = profile.get("nickname").toString();
         } else {
-            throw new CustomException(ErrorCode.INVALID_PROVIDER);
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(
+                            ErrorCode.INVALID_PROVIDER.name(),
+                            ErrorCode.INVALID_PROVIDER.getMessage(),
+                            null
+                    )
+            );
+
         }
 
         UserEntity user = userRepository.findByEmailAndDeleted(email, false)
-                .orElseGet(() -> UserEntity.builder()
-                        .email(email)
-                        .password("")
-                        .nickname(nickname)
-                        .provider(SocialProviderType.valueOf(registrationId))
-                        .providerId(providerId)
-                        .role(UserRoleType.ROLE_USER)
-                        .deleted(false)
-                        .build()
-                );
+                .orElse(null);
+
+        if (user == null) {
+            // 신규 가입
+            user = UserEntity.builder()
+                    .email(email)
+                    .password("")
+                    .nickname(nickname)
+                    .provider(SocialProviderType.valueOf(registrationId))
+                    .providerId(providerId)
+                    .role(UserRoleType.ROLE_USER)
+                    .deleted(false)
+                    .build();
+        } else {
+            // 이미 가입된 이메일
+            if (!user.getProvider().name().equals(registrationId)) {
+                log.warn("이미 다른 소셜로 가입된 이메일: {}", email);
+                throw new OAuth2AuthenticationException(
+                        new OAuth2Error(ErrorCode.DUPLICATE_EMAIL.name(),
+                                ErrorCode.DUPLICATE_EMAIL.getMessage(),
+                                null));
+            }
+        }
+
 
         // 기존 유저면 변경된 정보?? 업데이트
         user.updateSocialUser(email, nickname, providerId);

@@ -7,48 +7,35 @@ export async function refreshAccessToken() {
 		credentials: "include",
 	});
 
-	if (!res.ok) throw new Error("RefreshToken 만료");
+	if (!res.ok) throw new Error("서버와 통신할 수 없습니다.");
 
 	// 성공시 새 Token 저장
 	const response = await res.json();
-	const data = response.data;
-	localStorage.setItem("accessToken", data.accessToken);
+	const { accessToken } = response.data;
+	localStorage.setItem("accessToken", accessToken);
 
-	return data.accessToken;
+	return accessToken;
 }
 
 // AccessToken과 함께 fetch
 export async function fetchWithAccess(url, options = {}) {
 	// 로컬 스토리지로 부터 AccessToken 가져옴
 	let accessToken = localStorage.getItem("accessToken");
-	if (!accessToken) {
-		throw new Error("인증이 필요합니다.");
-	}
+	if (!accessToken) throw new Error("인증이 필요합니다.");
 
 	// 옵션에 Header 없는 경우 추가 + AccessToken 부착
-	if (!options.headers) options.headers = {};
-	options.headers["Authorization"] = `Bearer ${accessToken}`;
-	// credentials 포함
-	if (!options.credentials) {
-		options.credentials = "include";
-	}
+	options.headers = {
+		...(options.headers || {}),
+		Authorization: `Bearer ${accessToken}`,
+	};
+	options.credentials = options.credentials || "include";
 
-	// 요청 진행
 	let res = await fetch(url, options);
 
-	// AccessToken 만료로 401 뜨면, Refresh로 재발급
 	if (res.status === 401) {
-		try {
-			accessToken = await refreshAccessToken();
-			options.headers["Authorization"] = `Bearer ${accessToken}`;
-			// 재요청
-			res = await fetch(url, options);
-		} catch (err) {
-			// refresh 실패 → 강제 로그아웃
-			localStorage.removeItem("accessToken");
-			window.location.href = "/login";
-			throw err;
-		}
+		accessToken = await refreshAccessToken();
+		options.headers.Authorization = `Bearer ${accessToken}`;
+		res = await fetch(url, options);
 	}
 
 	return res;

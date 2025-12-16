@@ -14,6 +14,8 @@ public enum ErrorCode {
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인입니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다."),
     SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "새로운 비밀번호는 기존 비밀번호와 달라야 합니다."),
+    SOCIAL_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "소셜 토큰이 없습니다."),
+    SOCIAL_UNLINK_FAILED(HttpStatus.BAD_REQUEST, "소셜회원 탈퇴 실패"),
 
     // 401
     USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "존재하지 않는 사용자입니다."),

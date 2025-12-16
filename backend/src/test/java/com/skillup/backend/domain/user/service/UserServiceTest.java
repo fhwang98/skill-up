@@ -371,6 +371,56 @@ class UserServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.SAME_AS_OLD_PASSWORD);
     }
+    @Test
+    @DisplayName("회원 탈퇴 성공 - LOCAL 회원")
+    void deleteUser_local_success() {
+        // given
+        userService.createUser(
+                UserRequestDTO.builder()
+                        .email("delete@test.com")
+                        .password("password")
+                        .nickname("탈퇴유저")
+                        .build()
+        );
+
+        UserRequestDTO deleteDto = UserRequestDTO.builder()
+                .password("password")
+                .build();
+
+        // when
+        userService.deleteUser("delete@test.com", deleteDto);
+
+        // then
+        UserEntity deletedUser = userRepository
+                .findByEmailAndDeleted("delete@test.com", true)
+                .orElseThrow();
+
+        assertThat(deletedUser.isDeleted()).isTrue();
+    }
+    @Test
+    @DisplayName("회원 탈퇴 실패 - LOCAL 회원 비밀번호 불일치")
+    void deleteUser_local_wrongPassword_fail() {
+        // given
+        userService.createUser(
+                UserRequestDTO.builder()
+                        .email("delete@test.com")
+                        .password("password")
+                        .nickname("탈퇴유저")
+                        .build()
+        );
+
+        UserRequestDTO deleteDto = UserRequestDTO.builder()
+                .password("wrongpw")
+                .build();
+
+        // when & then
+        assertThatThrownBy(() ->
+                userService.deleteUser("delete@test.com", deleteDto)
+        )
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_PASSWORD);
+    }
 
 
 }

@@ -103,4 +103,14 @@ public class UserController {
         return ResponseEntity.ok(BaseResponse.success(responseBody));
     }
 
+    @DeleteMapping("/me")
+    @Operation(summary = "회원 탈퇴", description = "로그인한 사용자를 탈퇴 처리합니다.")
+    public ResponseEntity<BaseResponse<Void>> deleteUser(Authentication authentication,
+                                                         @RequestBody(required = false) UserRequestDTO dto) {
+        String email = authentication.getName();
+         userService.deleteUser(email, dto);
+        return ResponseEntity.ok(BaseResponse.success(null));
+    }
+
+
 }

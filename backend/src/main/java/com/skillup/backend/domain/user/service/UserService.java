@@ -1,5 +1,7 @@
 package com.skillup.backend.domain.user.service;
 
+import com.skillup.backend.domain.auth.oauth.service.SocialUnlinkService;
+import com.skillup.backend.domain.auth.service.RefreshTokenService;
 import com.skillup.backend.domain.user.dto.UserRequestDTO;
 import com.skillup.backend.domain.user.dto.UserResponseDTO;
 import com.skillup.backend.domain.user.entity.SocialProviderType;
@@ -21,6 +23,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
+    private final SocialUnlinkService socialUnlinkService;
 
     // 자체 회원가입
     @Transactional
@@ -133,5 +137,41 @@ public class UserService {
         entity.updatePassword(passwordEncoder.encode(dto.getNewPassword()));
 
         return entity.getId();
+    }
+
+    @Transactional
+    public void deleteUser(String email, UserRequestDTO dto) {
+        log.info("회원탈퇴 요청 :{}", email);
+        UserEntity entity = userRepository.findByEmailAndDeleted(email, false)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 사용자: {}", email);
+                    return new CustomException(ErrorCode.USER_NOT_FOUND);
+                });
+
+        // 자체회원 -> 토큰 지우기 & 소프트 딜리트
+        // 소셜회원 -> 토큰 지우기 & 소프트 딜리트 & 소셜토큰지우기 & 소셜에 토큰 해제 요청
+
+        if (entity.getProvider().equals(SocialProviderType.LOCAL)) {
+            // 자체 회원 비밀번호 확인
+            if (!passwordEncoder.matches(dto.getPassword(), entity.getPassword())) {
+                log.warn("비밀번호 일치하지 않음");
+                throw new CustomException(ErrorCode.INVALID_PASSWORD);
+            }
+        }
+        else {
+            // 소셜 회원 처리
+            log.info("소셜 회원 탈퇴 - provider: {}", entity.getProvider());
+            // 소셜 연동 해제
+            socialUnlinkService.unlink(entity);
+        }
+
+        // 토큰 지우기
+        refreshTokenService.removeRefresh(email);
+
+        // 유저 soft delete
+        entity.delete();
+
+        log.info("회원탈퇴 완료 email: {}", email);
+
     }
 }

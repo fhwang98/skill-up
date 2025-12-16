@@ -2,6 +2,7 @@ import { logout } from "@/api/auth";
 import {
 	changePassword,
 	checkNicknameExists,
+	deleteUser,
 	getUser,
 	updateUser,
 } from "@/api/user";
@@ -39,7 +40,17 @@ const UserPage = () => {
 	const [newPassword, setNewPassword] = useState("");
 	const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
+	const [isDeleting, setIsDeleting] = useState(false);
+
 	const [error, setError] = useState(null);
+
+	// 화면 진입시 초기화
+	useEffect(() => {
+		setPassword("");
+		setNewPassword("");
+		setConfirmNewPassword("");
+		setError(null);
+	}, [isEditing, isChangingPassword, isDeleting]);
 
 	// 유저 정보 조회
 	useEffect(() => {
@@ -57,8 +68,8 @@ const UserPage = () => {
 				setNewNickname(nickname);
 				setProvider(provider);
 				setCreatedAt(createdAt.split("T")[0]);
-			} catch (error) {
-				setError(error);
+			} catch (err) {
+				setError(err?.message ?? "요청 중 오류가 발생했습니다.");
 			}
 		};
 		fetchUserInfo();
@@ -134,7 +145,6 @@ const UserPage = () => {
 		try {
 			const response = await changePassword({ password, newPassword });
 			if (!response.success) {
-				console.log(response.error.message);
 				setError(response.error.message);
 				return;
 			}
@@ -153,16 +163,44 @@ const UserPage = () => {
 			navigate("/login");
 		}
 	};
+
+	// 회원 탈퇴 이벤트
+	const handleWithdrawal = async (e) => {
+		e.preventDefault();
+		setError(null);
+		if (provider === "LOCAL" && password === "") {
+			setError("비밀번호를 입력하세요.");
+			return;
+		}
+		if (!confirm("탈퇴 후 되돌릴 수 없습니다. 정말 탈퇴하시겠습니까?")) return;
+
+		try {
+			const response = await deleteUser({ password });
+			if (!response.success) {
+				setError(response.error.message);
+				return;
+			}
+			alert("회원 탈퇴가 완료되었습니다.");
+			handleLogout();
+		} catch (err) {
+			setError(err?.message ?? "요청 중 오류가 발생했습니다.");
+		}
+	};
+
 	return (
 		<div className="flex justify-center items-center min-h-screen bg-gray-100">
 			<Card className="w-full max-w-sm min-w-sm m-6">
 				<CardHeader className="text-center">
 					<CardTitle className="text-2xl">
-						{isChangingPassword ? "비밀번호 변경" : "내정보"}
+						{isChangingPassword
+							? "비밀번호 변경"
+							: isDeleting
+							? "회원 탈퇴"
+							: "내 정보"}
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
-					{!isChangingPassword && (
+					{!isChangingPassword && !isDeleting && (
 						<div>
 							<div className="grid w-full items-center gap-4">
 								<div className="flex justify-between">
@@ -255,6 +293,22 @@ const UserPage = () => {
 							) : null}
 						</div>
 					)}
+					{isDeleting && (
+						<div className=" space-y-4">
+							{provider === "LOCAL" && (
+								<div className="flex justify-between items-center gap-4">
+									<Label className="w-1/3">비밀번호</Label>
+									<Input
+										type="password"
+										value={password}
+										onChange={(e) => setPassword(e.target.value)}
+									/>
+								</div>
+							)}
+
+							{error && <p className="text-sm text-red-600 text-right">{error}</p>}
+						</div>
+					)}
 				</CardContent>
 				<CardFooter className="flex flex-col space-y-4">
 					{isEditing && (
@@ -303,7 +357,30 @@ const UserPage = () => {
 							</Button>
 						</div>
 					)}
-					{!isEditing && !isChangingPassword && (
+					{isDeleting && (
+						<div className="w-full space-y-4">
+							<Button
+								onClick={handleWithdrawal}
+								variant="destructive"
+								className="w-full cursor-pointer"
+								disabled={provider === "LOCAL" && password === ""}
+							>
+								탈퇴하기
+							</Button>
+							<Button
+								onClick={() => {
+									setError(null);
+									setPassword("");
+									setIsDeleting(false);
+								}}
+								variant="outline"
+								className="w-full cursor-pointer"
+							>
+								취소
+							</Button>
+						</div>
+					)}
+					{!isEditing && !isChangingPassword && !isDeleting && (
 						<div className="w-full space-y-4">
 							{provider === "LOCAL" && (
 								<div className="w-full space-y-4">
@@ -325,6 +402,13 @@ const UserPage = () => {
 							)}
 							<Button onClick={handleLogout} className="w-full cursor-pointer">
 								로그아웃
+							</Button>
+							<Button
+								variant="destructive"
+								onClick={() => setIsDeleting(true)}
+								className="w-full cursor-pointer"
+							>
+								회원 탈퇴
 							</Button>
 						</div>
 					)}

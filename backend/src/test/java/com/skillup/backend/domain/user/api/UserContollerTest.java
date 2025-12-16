@@ -302,4 +302,35 @@ class UserControllerTest {
                 .andDo(print());
     }
 
+    @Test
+    @DisplayName("회원 탈퇴 성공 - 자체 회원 (비밀번호 포함)")
+    void deleteUser_local_success() throws Exception {
+
+        // given
+        UserRequestDTO dto = UserRequestDTO.builder()
+                .password("password")
+                .build();
+
+        Mockito.doNothing()
+                .when(userService)
+                .deleteUser(Mockito.eq("me@test.com"), any(UserRequestDTO.class));
+
+        Authentication authentication = Mockito.mock(Authentication.class);
+        Mockito.when(authentication.getName()).thenReturn("me@test.com");
+
+        // when & then
+        mockMvc.perform(
+                        delete("/users/me")
+                                .principal(authentication)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andDo(print());
+
+        Mockito.verify(userService)
+                .deleteUser(Mockito.eq("me@test.com"), any(UserRequestDTO.class));
+    }
+
 }

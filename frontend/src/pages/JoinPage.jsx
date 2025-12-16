@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { checkEmailExists, checkNicknameExists, join } from "@/api/user";
+import { checkEmailExists, checkNicknameExists, createUser } from "@/api/user";
 
 function JoinPage() {
 	const navigate = useNavigate();
@@ -84,7 +84,7 @@ function JoinPage() {
 	}, [nickname]);
 
 	// 회원 가입 이벤트
-	const handleSignUp = async (e) => {
+	const handleJoin = async (e) => {
 		e.preventDefault();
 		setError(null);
 
@@ -94,7 +94,7 @@ function JoinPage() {
 		}
 
 		try {
-			const response = await join({ email, password, nickname });
+			const response = await createUser({ email, password, nickname });
 
 			if (!response.success) {
 				setError(response.error.message);
@@ -115,7 +115,7 @@ function JoinPage() {
 				<CardHeader className="text-center">
 					<CardTitle className="text-2xl">회원 가입</CardTitle>
 				</CardHeader>
-				<form onSubmit={handleSignUp}>
+				<form onSubmit={handleJoin}>
 					<CardContent>
 						<div className="grid w-full items-center gap-4">
 							<div className="flex flex-col space-y-1.5">
