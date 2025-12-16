@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +28,20 @@ public class CustomAuthenticationFailureHandler
     ) throws IOException {
 
         ErrorCode code = ErrorCode.AUTHENTICATION_FAILED;
+
+        if (exception instanceof OAuth2AuthenticationException e){
+            try{
+                code = ErrorCode.valueOf(e.getError().getErrorCode());
+            } catch (IllegalArgumentException ex) {
+                code = ErrorCode.AUTHENTICATION_FAILED;
+            }
+            String redirectUrl =
+                    "http://localhost:5173/login?error=" + code.name();
+            response.sendRedirect(redirectUrl);
+            return;
+        } else if (exception instanceof UsernameNotFoundException) {
+            code = ErrorCode.USER_NOT_FOUND;
+        }
 
         ErrorResponse error = ErrorResponse.builder()
                 .status(code.getStatus().value())

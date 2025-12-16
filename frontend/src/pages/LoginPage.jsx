@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import kakaoLoginUrl from "@/assets/images/kakao_login_medium_narrow.png";
 import naverLoginUrl from "@/assets/images/NAVER_login_Light_KR_green_narrow_H56.png";
 import { login } from "@/api/auth";
@@ -24,6 +24,26 @@ const LoginPage = () => {
 	const [error, setError] = useState("");
 
 	const navigate = useNavigate();
+
+	const [searchParams] = useSearchParams();
+	const errorCode = searchParams.get("error");
+
+	useEffect(() => {
+		if (!errorCode) return;
+
+		switch (errorCode) {
+			case "DUPLICATE_EMAIL":
+				alert("이미 사용중인 이메일입니다.");
+				break;
+			case "INVALID_PROVIDER":
+				alert("지원하지 않는 로그인 방식입니다.");
+				break;
+			default:
+				alert("소셜 로그인에 실패했습니다.");
+		}
+
+		navigate("/login", { replace: true });
+	}, [errorCode, navigate]);
 
 	// 자체 로그인 이벤트
 	const handleLogin = async (e) => {
