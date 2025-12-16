@@ -90,3 +90,17 @@ export const changePassword = async ({ password, newPassword }) => {
 
 	return await res.json();
 };
+
+//회원탈퇴
+export const deleteUser = async ({ password }) => {
+	const res = await fetchWithAccess(`${BASE_URL}/users/me`, {
+		method: "DELETE",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ password }),
+	});
+
+	if (!res) {
+		throw new Error("서버와 통신할 수 없습니다.");
+	}
+	return await res.json();
+};
