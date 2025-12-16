@@ -7,6 +7,7 @@ import com.skillup.backend.global.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CustomAuthenticationFailureHandler
@@ -29,18 +31,28 @@ public class CustomAuthenticationFailureHandler
 
         ErrorCode code = ErrorCode.AUTHENTICATION_FAILED;
 
-        if (exception instanceof OAuth2AuthenticationException e){
-            try{
+        if (exception instanceof OAuth2AuthenticationException e) {
+            try {
                 code = ErrorCode.valueOf(e.getError().getErrorCode());
-            } catch (IllegalArgumentException ex) {
-                code = ErrorCode.AUTHENTICATION_FAILED;
-            }
+            } catch (IllegalArgumentException ignored) {}
+        } else if (exception instanceof UsernameNotFoundException) {
+            code = ErrorCode.USER_NOT_FOUND;
+        }
+
+        String contextPath = request.getContextPath(); // "/api/v1"
+        String uri = request.getRequestURI();          // "/api/v1/oauth2/authorization/kakao"
+        // context-path 제거
+        String path = uri.substring(contextPath.length());
+
+        boolean isOAuth2Request =
+                path.startsWith("/oauth2/")
+                        || path.startsWith("/login/oauth2/");
+
+        if (isOAuth2Request) {
             String redirectUrl =
                     "http://localhost:5173/login?error=" + code.name();
             response.sendRedirect(redirectUrl);
             return;
-        } else if (exception instanceof UsernameNotFoundException) {
-            code = ErrorCode.USER_NOT_FOUND;
         }
 
         ErrorResponse error = ErrorResponse.builder()
