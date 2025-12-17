@@ -6,6 +6,7 @@ import com.skillup.backend.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,8 +32,8 @@ public class StudyEntity extends BaseEntity {
 
     // 스터디장
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private UserEntity owner;
+    @JoinColumn(name = "leader_id", nullable = false)
+    private UserEntity leader;
 
     // 최대 인원
     @Column(nullable = false)
@@ -40,12 +41,14 @@ public class StudyEntity extends BaseEntity {
 
     // 현재 인원
     @Column(nullable = false)
-    private int currentMembers;
+    @Builder.Default
+    private int currentMembers = 1;
 
     // 모집 상태
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StudyStatus status;
+    @Builder.Default
+    private StudyStatus status = StudyStatus.OPENED; // OPENED, CLOSED
 
     @OneToMany(
             mappedBy = "study",
@@ -54,6 +57,21 @@ public class StudyEntity extends BaseEntity {
     )
     @Builder.Default
     private List<StudyTagEntity> studyTags = new ArrayList<>();
+
+    // 모집 마감일
+    @Column(nullable = false)
+    private LocalDateTime recruitEndDate;
+
+    // 스터디 시작일
+    @Column(nullable = false)
+    private LocalDateTime startDate;
+
+    // 스터디 종료일 (선택)
+    private LocalDateTime endDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StudyCategory category;
 
     public void addTag(TagEntity tag) {
         this.studyTags.add(

@@ -1,14 +1,13 @@
 package com.skillup.backend.domain.study.dto;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.skillup.backend.domain.study.entity.StudyCategory;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -25,9 +24,20 @@ public class StudyRequestDTO {
     private String description;
 
     @Min(2)
-    @Max(10)
     private int maxMembers;
 
     @Size(max = 10)
     private List<@NotBlank String> tags;
+
+    @NotNull
+    private LocalDateTime startDate;
+
+    private LocalDateTime endDate;
+
+    @NotNull
+    private LocalDateTime recruitEndDate;
+
+    @NotNull
+    private StudyCategory category;
+
 }

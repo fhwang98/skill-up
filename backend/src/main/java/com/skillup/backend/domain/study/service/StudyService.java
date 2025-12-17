@@ -32,7 +32,7 @@ public class StudyService {
     public Long createStudy(String email, StudyRequestDTO dto) {
 
         log.info("스터디 생성 요청 email: {}", email);
-        UserEntity owner = userRepository.findByEmailAndDeleted(email, false)
+        UserEntity leader = userRepository.findByEmailAndDeleted(email, false)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 유저");
                     return new CustomException(ErrorCode.USER_NOT_FOUND);
@@ -41,10 +41,12 @@ public class StudyService {
         StudyEntity study = StudyEntity.builder()
                 .title(dto.getTitle())
                 .description(dto.getDescription())
-                .owner(owner)
+                .leader(leader)
                 .maxMembers(dto.getMaxMembers())
-                .currentMembers(1)
-                .status(StudyStatus.RECRUITING)
+                .category(dto.getCategory())
+                .recruitEndDate(dto.getRecruitEndDate())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
                 .build();
 
         // 태그 처리
