@@ -86,7 +86,7 @@ public class SecurityConfig {
         http
                 .addFilterBefore(new JWTFilter(jwtUtil), LogoutFilter.class);
         http
-                .addFilterBefore(new LoginFilter(authenticationManager(authenticationConfiguration), loginSuccessHandler), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new LoginFilter(authenticationManager(authenticationConfiguration), loginSuccessHandler, authenticationFailureHandler), UsernamePasswordAuthenticationFilter.class);
         // OAuth2 인증용
         http
                 .oauth2Login(oauth2 -> oauth2
@@ -109,6 +109,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/logout").authenticated()
                         .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/me", "/users/me/password").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/tags").permitAll()
                         .anyRequest().authenticated()
                 );
         // 예외 처리
