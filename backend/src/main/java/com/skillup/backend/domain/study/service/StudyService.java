@@ -1,8 +1,8 @@
 package com.skillup.backend.domain.study.service;
 
 import com.skillup.backend.domain.study.dto.StudyRequestDTO;
+import com.skillup.backend.domain.study.dto.StudyResponseDTO;
 import com.skillup.backend.domain.study.entity.StudyEntity;
-import com.skillup.backend.domain.study.entity.StudyStatus;
 import com.skillup.backend.domain.study.repository.StudyRepository;
 import com.skillup.backend.domain.tag.entity.TagEntity;
 import com.skillup.backend.domain.tag.repository.TagRepository;
@@ -10,10 +10,12 @@ import com.skillup.backend.domain.user.entity.UserEntity;
 import com.skillup.backend.domain.user.repository.UserRepository;
 import com.skillup.backend.global.exception.CustomException;
 import com.skillup.backend.global.exception.ErrorCode;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -71,5 +73,27 @@ public class StudyService {
 
         return studyRepository.save(study).getId();
     }
+
+    @Transactional(readOnly = true)
+    public Page<StudyResponseDTO> getStudies(String keyword, Pageable pageable) {
+        Page<StudyEntity> page;
+        if (keyword == null || keyword.isBlank()) {
+            page = studyRepository.findAll(pageable);
+        } else {
+            page = studyRepository.findByTitleContaining(keyword, pageable);
+        }
+       return page.map(study -> StudyResponseDTO.builder()
+                            .id(study.getId())
+                            .title(study.getTitle())
+                            .status(study.getStatus())
+                            .category(study.getCategory())
+                            .createdAt(study.getCreatedAt())
+                            .nickname(study.getLeader().getNickname())
+                            .tags(study.getStudyTags().stream()
+                                    .map(st -> st.getTag().getName())
+                                    .toList())
+                            .build());
+    }
+
 }
 
