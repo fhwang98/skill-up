@@ -6,7 +6,7 @@ import com.skillup.backend.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,14 +60,14 @@ public class StudyEntity extends BaseEntity {
 
     // 모집 마감일
     @Column(nullable = false)
-    private LocalDateTime recruitEndDate;
+    private LocalDate recruitEndDate;
 
     // 스터디 시작일
     @Column(nullable = false)
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
     // 스터디 종료일 (선택)
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

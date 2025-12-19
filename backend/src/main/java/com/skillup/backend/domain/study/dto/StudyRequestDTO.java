@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -30,12 +30,12 @@ public class StudyRequestDTO {
     private List<@NotBlank String> tags;
 
     @NotNull
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     @NotNull
-    private LocalDateTime recruitEndDate;
+    private LocalDate recruitEndDate;
 
     @NotNull
     private StudyCategory category;
