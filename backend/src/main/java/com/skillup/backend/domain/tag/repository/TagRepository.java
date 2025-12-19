@@ -9,5 +9,6 @@ import java.util.List;
 public interface TagRepository extends JpaRepository<TagEntity, Long> {
 
     List<TagEntity> findByNameIn(Collection<String> names);
+    List<TagEntity> findByNameContainingIgnoreCaseOrderByName(String keyword);
 
 }
