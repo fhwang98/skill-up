@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillup.backend.global.exception.CustomException;
 import com.skillup.backend.global.exception.ErrorCode;
+import com.skillup.backend.global.handler.CustomAuthenticationFailureHandler;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
@@ -41,9 +42,12 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
 
-    public LoginFilter(AuthenticationManager authenticationManager, AuthenticationSuccessHandler authenticationSuccessHandler) {
+    private final CustomAuthenticationFailureHandler authenticationFailureHandler;
+
+    public LoginFilter(AuthenticationManager authenticationManager, AuthenticationSuccessHandler authenticationSuccessHandler, CustomAuthenticationFailureHandler authenticationFailureHandler) {
         super(DEFAULT_ANT_PATH_REQUEST_MATCHER, authenticationManager);
         this.authenticationSuccessHandler = authenticationSuccessHandler;
+        this.authenticationFailureHandler = authenticationFailureHandler;
     }
 
     @Override
@@ -92,5 +96,11 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
                                             Authentication authResult) throws IOException, ServletException {
         log.info("Successful authentication 로그인 성공");
         authenticationSuccessHandler.onAuthenticationSuccess(request, response, authResult);
+    }
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
+        log.info("로그인 실패");
+        authenticationFailureHandler.onAuthenticationFailure(request, response, failed);
+
     }
 }

@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -29,6 +30,7 @@ public class CustomAuthenticationFailureHandler
             AuthenticationException exception
     ) throws IOException {
 
+        log.info(exception.getMessage());
         ErrorCode code = ErrorCode.AUTHENTICATION_FAILED;
 
         if (exception instanceof OAuth2AuthenticationException e) {
@@ -37,6 +39,8 @@ public class CustomAuthenticationFailureHandler
             } catch (IllegalArgumentException ignored) {}
         } else if (exception instanceof UsernameNotFoundException) {
             code = ErrorCode.USER_NOT_FOUND;
+        } else if (exception instanceof BadCredentialsException) {
+            code = ErrorCode.BAD_CREDENTIALS;
         }
 
         String contextPath = request.getContextPath(); // "/api/v1"

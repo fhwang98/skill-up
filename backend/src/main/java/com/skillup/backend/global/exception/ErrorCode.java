@@ -17,11 +17,14 @@ public enum ErrorCode {
     SOCIAL_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "소셜 토큰이 없습니다."),
     SOCIAL_UNLINK_FAILED(HttpStatus.BAD_REQUEST, "소셜회원 탈퇴 실패"),
 
+    INVALID_TAG(HttpStatus.BAD_REQUEST, "태그가 존재하지 않습니다."),
+
     // 401
     USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "존재하지 않는 사용자입니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
     AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다."),
+    BAD_CREDENTIALS(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호가 틀렸습니다."),
 
     // 403
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),

@@ -5,6 +5,10 @@ import { createBrowserRouter } from "react-router-dom";
 import LoginPage from "@/pages/LoginPage";
 import LoginCallbackPage from "@/pages/LoginCallbackPage";
 import UserPage from "@/pages/UserPage";
+import StudyCreatePage from "@/pages/StudyCreatePage";
+import StudyLayout from "@/pages/StudyLayout";
+import StudyUpdatePage from "@/pages/StudyUpdatePage";
+import StudyPage from "@/pages/StudyPage";
 
 const router = createBrowserRouter([
 	{
@@ -16,20 +20,39 @@ const router = createBrowserRouter([
 				element: <MainPage />,
 			},
 			{
-				path: "/join",
+				path: "join",
 				element: <JoinPage />,
 			},
 			{
-				path: "/login",
+				path: "login",
 				element: <LoginPage />,
 			},
 			{
-				path: "/oauth2/callback",
+				path: "oauth2/callback",
 				element: <LoginCallbackPage />,
 			},
 			{
-				path: "/me",
+				path: "me",
 				element: <UserPage />,
+			},
+
+			{
+				path: "study/",
+				element: <StudyLayout />,
+				children: [
+					{
+						path: "add",
+						element: <StudyCreatePage />,
+					},
+					{
+						path: "edit/:id",
+						element: <StudyUpdatePage />,
+					},
+					{
+						path: ":id",
+						element: <StudyPage />,
+					},
+				],
 			},
 		],
 	},
