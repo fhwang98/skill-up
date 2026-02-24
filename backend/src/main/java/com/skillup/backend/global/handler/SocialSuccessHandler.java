@@ -20,7 +20,7 @@ import java.io.IOException;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SocialSuccessHanlder implements AuthenticationSuccessHandler {
+public class SocialSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;
     private final SocialTokenService socialTokenService;
