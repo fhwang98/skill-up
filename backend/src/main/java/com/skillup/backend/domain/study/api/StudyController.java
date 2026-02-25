@@ -1,7 +1,10 @@
 package com.skillup.backend.domain.study.api;
 
+import com.skillup.backend.domain.study.dto.StudyDetailResponseDTO;
 import com.skillup.backend.domain.study.dto.StudyRequestDTO;
 import com.skillup.backend.domain.study.dto.StudyResponseDTO;
+import com.skillup.backend.domain.study.entity.StudyCategory;
+import com.skillup.backend.domain.study.entity.StudyStatus;
 import com.skillup.backend.domain.study.service.StudyService;
 import com.skillup.backend.global.common.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,25 +38,34 @@ public class StudyController {
     public ResponseEntity<BaseResponse<Map<String, Long>>> createStudy(
             Authentication authentication,
             @Valid @RequestBody StudyRequestDTO dto
-            ) {
+    ) {
         String email = authentication.getName();
         log.info("스터디 생성 요청 POST /studies - email:{}", email);
-
         Long id = studyService.createStudy(email, dto);
-        Map<String, Long> responseBody = Collections.singletonMap("studyId", id);
-        return ResponseEntity.ok(BaseResponse.success(responseBody));
+        return ResponseEntity.ok(BaseResponse.success(Collections.singletonMap("studyId", id)));
     }
 
     @GetMapping
-    @Operation(summary = "스터디 목록", description = "스터디 목록 api")
-    public ResponseEntity<BaseResponse<Page>> getStudies(
+    @Operation(summary = "스터디 목록 조회", description = "키워드 검색 + 카테고리/상태 필터 + 페이징")
+    public ResponseEntity<BaseResponse<Page<StudyResponseDTO>>> getStudies(
             @RequestParam(required = false) String keyword,
-            @PageableDefault(
-            size = 10,
-            sort = "createdAt",
-            direction = Sort.Direction.DESC) Pageable pageable) {
-        log.info("스터디 목록 요청 GET /studies");
-        Page<StudyResponseDTO> page = studyService.getStudies(keyword, pageable);
+            @RequestParam(required = false) StudyCategory category,
+            @RequestParam(required = false) StudyStatus status,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        log.info("스터디 목록 요청 GET /studies - keyword:{}, category:{}, status:{}", keyword, category, status);
+        Page<StudyResponseDTO> page = studyService.getStudies(keyword, category, status, pageable);
         return ResponseEntity.ok(BaseResponse.success(page));
     }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "스터디 상세 조회", description = "스터디 단건 상세 조회 api")
+    public ResponseEntity<BaseResponse<StudyDetailResponseDTO>> getStudyDetail(
+            @PathVariable Long id
+    ) {
+        log.info("스터디 상세 조회 요청 GET /studies/{}", id);
+        StudyDetailResponseDTO dto = studyService.getStudyDetail(id);
+        return ResponseEntity.ok(BaseResponse.success(dto));
+    }
 }
+

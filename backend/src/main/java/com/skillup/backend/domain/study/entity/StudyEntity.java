@@ -73,6 +73,13 @@ public class StudyEntity extends BaseEntity {
     @Column(nullable = false)
     private StudyCategory category;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private long viewCount = 0;
+
+    @Builder.Default
+    private boolean deleted = false;
+
     public void addTag(TagEntity tag) {
         this.studyTags.add(
                 StudyTagEntity.builder()

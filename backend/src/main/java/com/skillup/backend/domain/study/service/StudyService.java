@@ -1,8 +1,11 @@
 package com.skillup.backend.domain.study.service;
 
+import com.skillup.backend.domain.study.dto.StudyDetailResponseDTO;
 import com.skillup.backend.domain.study.dto.StudyRequestDTO;
 import com.skillup.backend.domain.study.dto.StudyResponseDTO;
+import com.skillup.backend.domain.study.entity.StudyCategory;
 import com.skillup.backend.domain.study.entity.StudyEntity;
+import com.skillup.backend.domain.study.entity.StudyStatus;
 import com.skillup.backend.domain.study.repository.StudyRepository;
 import com.skillup.backend.domain.tag.entity.TagEntity;
 import com.skillup.backend.domain.tag.repository.TagRepository;
@@ -75,25 +78,60 @@ public class StudyService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StudyResponseDTO> getStudies(String keyword, Pageable pageable) {
-        Page<StudyEntity> page;
-        if (keyword == null || keyword.isBlank()) {
-            page = studyRepository.findAll(pageable);
-        } else {
-            page = studyRepository.findByTitleContaining(keyword, pageable);
-        }
-       return page.map(study -> StudyResponseDTO.builder()
-                            .id(study.getId())
-                            .title(study.getTitle())
-                            .status(study.getStatus())
-                            .category(study.getCategory())
-                            .createdAt(study.getCreatedAt())
-                            .nickname(study.getLeader().getNickname())
-                            .tags(study.getStudyTags().stream()
-                                    .map(st -> st.getTag().getName())
-                                    .toList())
-                            .build());
+    public Page<StudyResponseDTO> getStudies(String keyword, StudyCategory category, StudyStatus status, Pageable pageable) {
+
+        // 빈 문자열은 null 처리하여 JPQL의 :keyword IS NULL 조건에 맞춤
+        String keywordParam = (keyword == null || keyword.isBlank()) ? null : keyword;
+
+        Page<StudyEntity> page = studyRepository.findAllWithFilter(keywordParam, category, status, pageable);
+
+        return page.map(study -> StudyResponseDTO.builder()
+                .id(study.getId())
+                .title(study.getTitle())
+                .status(study.getStatus())
+                .category(study.getCategory())
+                .createdAt(study.getCreatedAt())
+                .nickname(study.getLeader().getNickname())
+                .tags(study.getStudyTags().stream()
+                        .map(st -> st.getTag().getName())
+                        .toList())
+                .build());
     }
 
+    @Transactional(readOnly = true)
+    public StudyDetailResponseDTO getStudyDetail(Long id) {
+
+        log.info("스터디 상세 조회 id: {}", id);
+        StudyEntity study = studyRepository.findWithDetailsById(id)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 스터디 id: {}", id);
+                    return new CustomException(ErrorCode.STUDY_NOT_FOUND);
+                });
+
+        // soft delete된 스터디 접근 차단
+        if (study.isDeleted()) {
+            throw new CustomException(ErrorCode.STUDY_NOT_FOUND);
+        }
+
+        return StudyDetailResponseDTO.builder()
+                .id(study.getId())
+                .title(study.getTitle())
+                .description(study.getDescription())
+                .leaderNickname(study.getLeader().getNickname())
+                .maxMembers(study.getMaxMembers())
+                .currentMembers(study.getCurrentMembers())
+                .status(study.getStatus())
+                .category(study.getCategory())
+                .tags(study.getStudyTags().stream()
+                        .map(st -> st.getTag().getName())
+                        .toList())
+                .viewCount(study.getViewCount())
+                .recruitEndDate(study.getRecruitEndDate())
+                .startDate(study.getStartDate())
+                .endDate(study.getEndDate())
+                .createdAt(study.getCreatedAt())
+                .build();
+    }
 }
+
 
