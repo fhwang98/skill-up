@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { getUser } from "@/api/user";
 
 const LoginCallbackPage = () => {
 	const navigate = useNavigate();
@@ -15,7 +16,14 @@ const LoginCallbackPage = () => {
 		}
 
 		localStorage.setItem("accessToken", accessToken);
-		navigate("/");
+
+		// 닉네임 저장 (리더 판별용)
+		getUser()
+			.then((res) => {
+				if (res.success) localStorage.setItem("nickname", res.data.nickname);
+			})
+			.catch(() => {})
+			.finally(() => navigate("/"));
 	}, [navigate, query]);
 
 	return <div>로그인 처리중...</div>;

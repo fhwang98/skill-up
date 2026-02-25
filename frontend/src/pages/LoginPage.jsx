@@ -13,6 +13,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import kakaoLoginUrl from "@/assets/images/kakao_login_medium_narrow.png";
 import naverLoginUrl from "@/assets/images/NAVER_login_Light_KR_green_narrow_H56.png";
 import { login } from "@/api/auth";
+import { getUser } from "@/api/user";
 
 // .env로 부터 백엔드 URL 받아오기
 const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
@@ -65,6 +66,17 @@ const LoginPage = () => {
 
 			const { accessToken } = response.data;
 			localStorage.setItem("accessToken", accessToken);
+
+			// 닉네임 저장 (리더 판별용)
+			try {
+				const userResponse = await getUser();
+				if (userResponse.success) {
+					localStorage.setItem("nickname", userResponse.data.nickname);
+				}
+			} catch {
+				// nickname 저장 실패해도 로그인은 정상 처리
+			}
+
 			navigate("/");
 		} catch {
 			setError("서버와 통신할 수 없습니다.");

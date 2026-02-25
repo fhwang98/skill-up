@@ -3,6 +3,7 @@ package com.skillup.backend.domain.study.service;
 import com.skillup.backend.domain.study.dto.StudyDetailResponseDTO;
 import com.skillup.backend.domain.study.dto.StudyRequestDTO;
 import com.skillup.backend.domain.study.dto.StudyResponseDTO;
+import com.skillup.backend.domain.study.dto.StudyUpdateRequestDTO;
 import com.skillup.backend.domain.study.entity.StudyCategory;
 import com.skillup.backend.domain.study.entity.StudyStatus;
 import com.skillup.backend.domain.tag.entity.TagEntity;
@@ -242,10 +243,198 @@ class StudyServiceTest {
     }
 
     @Test
-    @DisplayName("스터디 상세 조회 실패 - 존재하지 않는 스터디")
-    void getStudyDetail_notFound_fail() {
+    @DisplayName("스터디 상세 조회 실패 - soft delete된 스터디")
+    void getStudyDetail_deleted_fail() {
+        // given
+        Long studyId = studyService.createStudy(leader.getEmail(), buildRequest("삭제될 스터디", null));
+        studyService.deleteStudy(leader.getEmail(), studyId);
+
         // when & then
-        assertThatThrownBy(() -> studyService.getStudyDetail(999L))
+        assertThatThrownBy(() -> studyService.getStudyDetail(studyId))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_NOT_FOUND);
+    }
+
+    // ─────────────────────────────────────────
+    // 스터디 수정
+    // ─────────────────────────────────────────
+
+    private StudyUpdateRequestDTO buildUpdateRequest(String title, List<String> tags) {
+        return StudyUpdateRequestDTO.builder()
+                .title(title)
+                .description("수정된 설명입니다.")
+                .maxMembers(8)
+                .tags(tags)
+                .status(StudyStatus.OPENED)
+                .recruitEndDate(LocalDate.now().plusDays(10))
+                .startDate(LocalDate.now().plusDays(20))
+                .endDate(LocalDate.now().plusDays(90))
+                .build();
+    }
+
+    @Test
+    @DisplayName("스터디 수정 성공")
+    void updateStudy_success() {
+        // given
+        Long studyId = studyService.createStudy(leader.getEmail(), buildRequest("원래 제목", List.of("java")));
+        StudyUpdateRequestDTO updateDto = buildUpdateRequest("수정된 제목", List.of("spring"));
+
+        // when
+        studyService.updateStudy(leader.getEmail(), studyId, updateDto);
+
+        // then
+        StudyDetailResponseDTO updated = studyService.getStudyDetail(studyId);
+        assertThat(updated.getTitle()).isEqualTo("수정된 제목");
+        assertThat(updated.getDescription()).isEqualTo("수정된 설명입니다.");
+        assertThat(updated.getMaxMembers()).isEqualTo(8);
+        assertThat(updated.getTags()).containsExactly("spring");
+        assertThat(updated.getTags()).doesNotContain("java");
+    }
+
+    @Test
+    @DisplayName("스터디 수정 성공 - 태그 전체 제거")
+    void updateStudy_clearTags_success() {
+        // given
+        Long studyId = studyService.createStudy(leader.getEmail(), buildRequest("스터디", List.of("java", "spring")));
+        StudyUpdateRequestDTO updateDto = buildUpdateRequest("스터디", null);
+
+        // when
+        studyService.updateStudy(leader.getEmail(), studyId, updateDto);
+
+        // then
+        StudyDetailResponseDTO updated = studyService.getStudyDetail(studyId);
+        assertThat(updated.getTags()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("스터디 수정 실패 - 존재하지 않는 스터디")
+    void updateStudy_notFound_fail() {
+        // given
+        StudyUpdateRequestDTO updateDto = buildUpdateRequest("수정", null);
+
+        // when & then
+        assertThatThrownBy(() -> studyService.updateStudy(leader.getEmail(), 999L, updateDto))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("스터디 수정 실패 - 리더가 아닌 유저")
+    void updateStudy_forbidden_fail() {
+        // given
+        Long studyId = studyService.createStudy(leader.getEmail(), buildRequest("스터디", null));
+
+        UserEntity other = userRepository.save(UserEntity.builder()
+                .email("other@test.com")
+                .password("password")
+                .nickname("다른유저")
+                .role(UserRoleType.ROLE_USER)
+                .provider(SocialProviderType.LOCAL)
+                .deleted(false)
+                .build());
+
+        StudyUpdateRequestDTO updateDto = buildUpdateRequest("수정 시도", null);
+
+        // when & then
+        assertThatThrownBy(() -> studyService.updateStudy(other.getEmail(), studyId, updateDto))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("스터디 수정 실패 - soft delete된 스터디")
+    void updateStudy_deleted_fail() {
+        // given
+        Long studyId = studyService.createStudy(leader.getEmail(), buildRequest("스터디", null));
+        studyService.deleteStudy(leader.getEmail(), studyId);
+
+        StudyUpdateRequestDTO updateDto = buildUpdateRequest("수정 시도", null);
+
+        // when & then
+        assertThatThrownBy(() -> studyService.updateStudy(leader.getEmail(), studyId, updateDto))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("스터디 수정 실패 - 존재하지 않는 태그")
+    void updateStudy_invalidTag_fail() {
+        // given
+        Long studyId = studyService.createStudy(leader.getEmail(), buildRequest("스터디", List.of("java")));
+        StudyUpdateRequestDTO updateDto = buildUpdateRequest("수정", List.of("없는태그"));
+
+        // when & then
+        assertThatThrownBy(() -> studyService.updateStudy(leader.getEmail(), studyId, updateDto))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_TAG);
+    }
+
+    // ─────────────────────────────────────────
+    // 스터디 삭제
+    // ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("스터디 삭제 성공 - soft delete 확인")
+    void deleteStudy_success() {
+        // given
+        Long studyId = studyService.createStudy(leader.getEmail(), buildRequest("삭제할 스터디", null));
+
+        // when
+        studyService.deleteStudy(leader.getEmail(), studyId);
+
+        // then — 삭제 후 조회 시 STUDY_NOT_FOUND
+        assertThatThrownBy(() -> studyService.getStudyDetail(studyId))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("스터디 삭제 실패 - 존재하지 않는 스터디")
+    void deleteStudy_notFound_fail() {
+        // when & then
+        assertThatThrownBy(() -> studyService.deleteStudy(leader.getEmail(), 999L))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("스터디 삭제 실패 - 리더가 아닌 유저")
+    void deleteStudy_forbidden_fail() {
+        // given
+        Long studyId = studyService.createStudy(leader.getEmail(), buildRequest("스터디", null));
+
+        UserEntity other = userRepository.save(UserEntity.builder()
+                .email("other2@test.com")
+                .password("password")
+                .nickname("다른유저2")
+                .role(UserRoleType.ROLE_USER)
+                .provider(SocialProviderType.LOCAL)
+                .deleted(false)
+                .build());
+
+        // when & then
+        assertThatThrownBy(() -> studyService.deleteStudy(other.getEmail(), studyId))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("스터디 삭제 실패 - 이미 삭제된 스터디")
+    void deleteStudy_alreadyDeleted_fail() {
+        // given
+        Long studyId = studyService.createStudy(leader.getEmail(), buildRequest("스터디", null));
+        studyService.deleteStudy(leader.getEmail(), studyId);
+
+        // when & then
+        assertThatThrownBy(() -> studyService.deleteStudy(leader.getEmail(), studyId))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.STUDY_NOT_FOUND);

@@ -23,6 +23,7 @@ const Header = () => {
 			await logout();
 		} finally {
 			localStorage.removeItem("accessToken");
+			localStorage.removeItem("nickname");
 			navigate("/login");
 		}
 	};
