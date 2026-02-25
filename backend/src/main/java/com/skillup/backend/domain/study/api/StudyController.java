@@ -3,6 +3,7 @@ package com.skillup.backend.domain.study.api;
 import com.skillup.backend.domain.study.dto.StudyDetailResponseDTO;
 import com.skillup.backend.domain.study.dto.StudyRequestDTO;
 import com.skillup.backend.domain.study.dto.StudyResponseDTO;
+import com.skillup.backend.domain.study.dto.StudyUpdateRequestDTO;
 import com.skillup.backend.domain.study.entity.StudyCategory;
 import com.skillup.backend.domain.study.entity.StudyStatus;
 import com.skillup.backend.domain.study.service.StudyService;
@@ -66,6 +67,31 @@ public class StudyController {
         log.info("스터디 상세 조회 요청 GET /studies/{}", id);
         StudyDetailResponseDTO dto = studyService.getStudyDetail(id);
         return ResponseEntity.ok(BaseResponse.success(dto));
+    }
+
+    @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "스터디 수정", description = "스터디장만 가능. 태그는 전체 교체 방식.")
+    public ResponseEntity<BaseResponse<Map<String, Long>>> updateStudy(
+            Authentication authentication,
+            @PathVariable Long id,
+            @Valid @RequestBody StudyUpdateRequestDTO dto
+    ) {
+        String email = authentication.getName();
+        log.info("스터디 수정 요청 PATCH /studies/{} - email:{}", id, email);
+        Long studyId = studyService.updateStudy(email, id, dto);
+        return ResponseEntity.ok(BaseResponse.success(Collections.singletonMap("studyId", studyId)));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "스터디 삭제", description = "스터디장만 가능. Soft Delete.")
+    public ResponseEntity<BaseResponse<Void>> deleteStudy(
+            Authentication authentication,
+            @PathVariable Long id
+    ) {
+        String email = authentication.getName();
+        log.info("스터디 삭제 요청 DELETE /studies/{} - email:{}", id, email);
+        studyService.deleteStudy(email, id);
+        return ResponseEntity.ok(BaseResponse.success(null));
     }
 }
 

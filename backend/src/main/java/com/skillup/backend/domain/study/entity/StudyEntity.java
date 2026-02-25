@@ -89,4 +89,24 @@ public class StudyEntity extends BaseEntity {
         );
     }
 
+    public void update(String title, String description, int maxMembers,
+                       StudyStatus status, java.time.LocalDate recruitEndDate,
+                       java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        this.title = title;
+        this.description = description;
+        this.maxMembers = maxMembers;
+        this.status = status;
+        this.recruitEndDate = recruitEndDate;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    public void clearTags() {
+        this.studyTags.clear();
+    }
+
+    public void delete() {
+        this.deleted = true;
+    }
+
 }

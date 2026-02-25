@@ -3,6 +3,7 @@ package com.skillup.backend.domain.study.service;
 import com.skillup.backend.domain.study.dto.StudyDetailResponseDTO;
 import com.skillup.backend.domain.study.dto.StudyRequestDTO;
 import com.skillup.backend.domain.study.dto.StudyResponseDTO;
+import com.skillup.backend.domain.study.dto.StudyUpdateRequestDTO;
 import com.skillup.backend.domain.study.entity.StudyCategory;
 import com.skillup.backend.domain.study.entity.StudyEntity;
 import com.skillup.backend.domain.study.entity.StudyStatus;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 @Slf4j
 @Service
@@ -132,6 +134,83 @@ public class StudyService {
                 .createdAt(study.getCreatedAt())
                 .build();
     }
+
+    @Transactional
+    public Long updateStudy(String email, Long studyId, StudyUpdateRequestDTO dto) {
+
+        log.info("스터디 수정 요청 studyId: {}, email: {}", studyId, email);
+
+        StudyEntity study = studyRepository.findWithDetailsById(studyId)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 스터디 id: {}", studyId);
+                    return new CustomException(ErrorCode.STUDY_NOT_FOUND);
+                });
+
+        if (study.isDeleted()) {
+            throw new CustomException(ErrorCode.STUDY_NOT_FOUND);
+        }
+
+        // 리더 권한 검증
+        if (!study.getLeader().getEmail().equals(email)) {
+            log.warn("스터디 수정 권한 없음 - studyId: {}, email: {}", studyId, email);
+            throw new CustomException(ErrorCode.STUDY_FORBIDDEN);
+        }
+
+        // 기본 정보 수정
+        study.update(
+                dto.getTitle(),
+                dto.getDescription(),
+                dto.getMaxMembers(),
+                dto.getStatus(),
+                dto.getRecruitEndDate(),
+                dto.getStartDate(),
+                dto.getEndDate()
+        );
+
+        // 태그 교체 (기존 태그 전부 제거 후 새로 추가)
+        study.clearTags();
+
+        if (dto.getTags() != null && !dto.getTags().isEmpty()) {
+            Set<String> normalizedTags = dto.getTags().stream()
+                    .map(String::trim)
+                    .map(String::toLowerCase)
+                    .filter(tag -> !tag.isBlank())
+                    .collect(Collectors.toSet());
+
+            List<TagEntity> tags = tagRepository.findByNameIn(normalizedTags);
+
+            if (tags.size() != normalizedTags.size()) {
+                log.warn("존재하지 않는 태그 포함");
+                throw new CustomException(ErrorCode.INVALID_TAG);
+            }
+
+            tags.forEach(study::addTag);
+        }
+
+        return study.getId();
+    }
+
+    @Transactional
+    public void deleteStudy(String email, Long studyId) {
+
+        log.info("스터디 삭제 요청 studyId: {}, email: {}", studyId, email);
+
+        StudyEntity study = studyRepository.findById(studyId)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 스터디 id: {}", studyId);
+                    return new CustomException(ErrorCode.STUDY_NOT_FOUND);
+                });
+
+        if (study.isDeleted()) {
+            throw new CustomException(ErrorCode.STUDY_NOT_FOUND);
+        }
+
+        // 리더 권한 검증
+        if (!study.getLeader().getEmail().equals(email)) {
+            log.warn("스터디 삭제 권한 없음 - studyId: {}, email: {}", studyId, email);
+            throw new CustomException(ErrorCode.STUDY_FORBIDDEN);
+        }
+
+        study.delete();
+    }
 }
-
-
