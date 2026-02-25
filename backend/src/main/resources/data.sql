@@ -1,3 +1,7 @@
+-- 테스트용 유저 (leader_id = 1 참조용)
+INSERT INTO tbl_user (email, nickname, password, provider, role, deleted)
+VALUES ('test@skillup.com', '테스트유저', '$2a$10$dummy.password.hash.for.dev.only', 'LOCAL', 'ROLE_USER', false);
+
 INSERT INTO tbl_tag (name) VALUES ('SPRING');
 INSERT INTO tbl_tag (name) VALUES ('JPA');
 INSERT INTO tbl_tag (name) VALUES ('SECURITY');
