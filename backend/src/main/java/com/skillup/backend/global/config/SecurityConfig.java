@@ -34,7 +34,7 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final JWTUtil jwtUtil;
     private final LoginSuccessHandler loginSuccessHandler;
-    private final SocialSuccessHanlder socialSuccessHanlder;
+    private final SocialSuccessHandler socialSuccessHandler;
     private final AuthenticationConfiguration authenticationConfiguration;
     private final CustomAuthenticationFailureHandler authenticationFailureHandler;
     private final CustomLogoutHandler customLogoutHandler;
@@ -90,7 +90,7 @@ public class SecurityConfig {
         // OAuth2 인증용
         http
                 .oauth2Login(oauth2 -> oauth2
-                        .successHandler(socialSuccessHanlder)
+                        .successHandler(socialSuccessHandler)
                         .failureHandler(authenticationFailureHandler));
         // 로그아웃
         http
