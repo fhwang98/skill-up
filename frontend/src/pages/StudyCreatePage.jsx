@@ -16,13 +16,15 @@ import { useNavigate } from "react-router-dom";
 
 const StudyCreatePage = () => {
 	const navigate = useNavigate();
+	const today = new Date().toISOString().split("T")[0];
+
 	const [form, setForm] = useState({
 		title: "",
 		description: "",
 		maxMembers: 2,
 		category: null,
 		tags: [],
-		startDate: "",
+		startDate: today,
 		endDate: "",
 		recruitEndDate: "",
 	});
@@ -30,8 +32,6 @@ const StudyCreatePage = () => {
 	const [tagKeyword, setTagKeyword] = useState("");
 	const [tagResults, setTagResults] = useState([]);
 	const [selectedIndex, setSelectedIndex] = useState(0);
-
-	const today = new Date().toISOString().split("T")[0];
 
 	const [error, setError] = useState("");
 
