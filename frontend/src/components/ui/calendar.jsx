@@ -1,7 +1,46 @@
 import * as React from "react"
-import { DayPicker } from "react-day-picker"
+import { DayPicker, useDayPicker } from "react-day-picker"
 import { cn } from "@/lib/utils"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { format } from "date-fns"
+import { ko } from "date-fns/locale"
+
+// Nav는 숨기고 MonthCaption 안에 화살표를 직접 포함
+function CalendarHeader({ calendarMonth }) {
+  const { nextMonth, previousMonth, goToMonth } = useDayPicker()
+
+  return (
+    <div className="flex items-center justify-between h-7 px-1">
+      <button
+        type="button"
+        onClick={() => previousMonth && goToMonth(previousMonth)}
+        disabled={!previousMonth}
+        className={cn(
+          "h-7 w-7 inline-flex items-center justify-center rounded-md border border-input",
+          previousMonth ? "opacity-50 hover:opacity-100 hover:bg-accent cursor-pointer" : "opacity-20 cursor-not-allowed"
+        )}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+
+      <span className="text-sm font-medium">
+        {format(calendarMonth.date, "yyyy년 MM월", { locale: ko })}
+      </span>
+
+      <button
+        type="button"
+        onClick={() => nextMonth && goToMonth(nextMonth)}
+        disabled={!nextMonth}
+        className={cn(
+          "h-7 w-7 inline-flex items-center justify-center rounded-md border border-input",
+          nextMonth ? "opacity-50 hover:opacity-100 hover:bg-accent cursor-pointer" : "opacity-20 cursor-not-allowed"
+        )}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  )
+}
 
 function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
   return (
@@ -10,18 +49,10 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
       className={cn("p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row gap-4",
-        month: "relative flex flex-col gap-4",
-        month_caption: "flex justify-center pt-1 items-center h-7",
-        caption_label: "text-sm font-medium",
-        nav: "absolute top-1 flex w-full justify-between px-1",
-        button_previous: cn(
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-          "inline-flex items-center justify-center rounded-md border border-input hover:bg-accent"
-        ),
-        button_next: cn(
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-          "inline-flex items-center justify-center rounded-md border border-input hover:bg-accent"
-        ),
+        month: "flex flex-col gap-4",
+        month_caption: "flex justify-center items-center",
+        caption_label: "hidden", // CalendarHeader에서 직접 렌더링
+        nav: "hidden",           // CalendarHeader에서 직접 렌더링
         month_grid: "w-full border-collapse space-y-1",
         weekdays: "flex",
         weekday: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem] text-center",
@@ -41,10 +72,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
         ...classNames,
       }}
       components={{
-        Chevron: ({ orientation }) =>
-          orientation === "left"
-            ? <ChevronLeft className="h-4 w-4" />
-            : <ChevronRight className="h-4 w-4" />,
+        MonthCaption: (props) => <CalendarHeader {...props} />,
       }}
       {...props}
     />
