@@ -195,8 +195,8 @@ context-path: `/api/v1`
 | POST   | `/studies`       | ✅        | 스터디 생성                                    |
 | GET    | `/studies`       | ❌        | 스터디 목록 조회 (키워드/카테고리/상태/페이징) |
 | GET    | `/studies/{id}`  | ❌        | 스터디 상세 조회                               |
-| PATCH  | `/studies/{id}`  | ✅        | 스터디 수정 (미구현)                           |
-| DELETE | `/studies/{id}`  | ✅        | 스터디 삭제 (미구현)                           |
+| PATCH  | `/studies/{id}`  | ✅        | 스터디 수정 (리더만, 태그 전체 교체)           |
+| DELETE | `/studies/{id}`  | ✅        | 스터디 삭제 (리더만, soft delete)              |
 
 ### Tag
 
@@ -250,16 +250,16 @@ JUnit5 + AssertJ + Spring Security Test 기반으로 단위 테스트를 작성�
 - `UserServiceTest` - 회원가입, 정보 수정 등 서비스 테스트
 - `SocialUserTest` - 소셜 회원 관련 서비스 테스트
 - `UserControllerTest` - UserController Mock 기반 통합 테스트
-- `StudyServiceTest` - 스터디 생성/조회 서비스 테스트
+- `StudyServiceTest` - 스터디 생성/조회/수정/삭제 서비스 테스트 (17개 케이스)
 
 ---
 
 ## 11. 향후 개선 사항
 
-- 스터디 수정 / 삭제 API 구현
 - 스터디 참가 신청 / 승인 / 거절 기능
 - 스터디 북마크 기능
-- 알림 기능
+- 알림 기능 (SSE)
+- Redis 캐싱 + 인기 스터디 랭킹
 - 스터디 내 게시판 / 댓글 기능
 - 신고 기능 + 관리자 페이지
 - MySQL 전환 및 AWS 배포 (EC2 + RDS)
