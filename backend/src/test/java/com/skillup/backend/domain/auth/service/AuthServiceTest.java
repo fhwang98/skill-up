@@ -4,8 +4,6 @@ import com.skillup.backend.domain.auth.dto.CustomUserDetails;
 import com.skillup.backend.domain.user.entity.UserEntity;
 import com.skillup.backend.domain.user.entity.UserRoleType;
 import com.skillup.backend.domain.user.repository.UserRepository;
-import com.skillup.backend.global.exception.CustomException;
-import com.skillup.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.Optional;
 
@@ -63,8 +62,7 @@ class AuthServiceTest {
 
         // when / then
         assertThatThrownBy(() -> authService.loadUserByUsername("no@test.com"))
-                .isInstanceOf(CustomException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+                .isInstanceOf(UsernameNotFoundException.class)
+                .hasMessage("USER_NOT_FOUND");
     }
 }

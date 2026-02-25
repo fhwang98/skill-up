@@ -5,7 +5,6 @@ import com.skillup.backend.domain.user.entity.SocialProviderType;
 import com.skillup.backend.domain.user.entity.UserEntity;
 import com.skillup.backend.domain.user.entity.UserRoleType;
 import com.skillup.backend.domain.user.repository.UserRepository;
-import com.skillup.backend.global.exception.CustomException;
 import com.skillup.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +13,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Map;
@@ -140,9 +140,11 @@ class AuthServiceOAuth2Test {
 
         // when / then
         assertThatThrownBy(() -> authService.loadUser(userRequest))
-                .isInstanceOf(CustomException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.INVALID_PROVIDER);
+                .isInstanceOf(OAuth2AuthenticationException.class)
+                .satisfies(ex -> {
+                    OAuth2AuthenticationException oauthEx = (OAuth2AuthenticationException) ex;
+                    assertThat(oauthEx.getError().getErrorCode()).isEqualTo(ErrorCode.INVALID_PROVIDER.name());
+                });
     }
 
 }
