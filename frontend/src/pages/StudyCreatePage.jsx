@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { createStudy, getTags } from "@/api/study";
 import { useNavigate } from "react-router-dom";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const StudyCreatePage = () => {
 	const navigate = useNavigate();
@@ -250,30 +251,28 @@ const StudyCreatePage = () => {
 					<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 						<div className="space-y-2">
 							<Label>스터디 시작일</Label>
-							<Input
-								type="date"
-								min={today}
+							<DatePicker
 								value={form.startDate}
-								onChange={(e) => handleChange("startDate", e.target.value)}
+								onChange={(v) => handleChange("startDate", v)}
+								placeholder="시작일 선택"
 							/>
 						</div>
 						<div className="space-y-2">
 							<Label>스터디 종료일 (선택)</Label>
-							<Input
-								type="date"
-								min={form.startDate || today}
+							<DatePicker
 								value={form.endDate}
-								onChange={(e) => handleChange("endDate", e.target.value)}
+								onChange={(v) => handleChange("endDate", v)}
+								placeholder="종료일 선택"
+								minDate={form.startDate ? new Date(form.startDate) : undefined}
 							/>
 						</div>
 					</div>
 					<div className="space-y-2">
 						<Label>모집 마감일</Label>
-						<Input
-							type="date"
-							min={today}
+						<DatePicker
 							value={form.recruitEndDate}
-							onChange={(e) => handleChange("recruitEndDate", e.target.value)}
+							onChange={(v) => handleChange("recruitEndDate", v)}
+							placeholder="모집 마감일 선택"
 						/>
 					</div>
 
